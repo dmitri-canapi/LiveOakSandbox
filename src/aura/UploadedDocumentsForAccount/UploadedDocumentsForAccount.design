@@ -1,0 +1,7 @@
+<design:component>
+    <design:attribute name="skin" label="Layout style" datasource="skyblue,terrace,web,material" />
+    <design:attribute name="communityName" label="Community Name" />
+    <design:attribute name="componentHeight" label="Component Height" />
+
+    <design:attribute name="readOnlyMode" label="Enable Read-only mode?" datasource="false,true" />
+</design:component>

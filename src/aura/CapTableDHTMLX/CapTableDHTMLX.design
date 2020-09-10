@@ -1,0 +1,8 @@
+<design:component>
+    <design:attribute name="skin"
+                    label="Layout style"
+                    datasource="skyblue,terrace,web,material" />
+    <design:attribute name="communityName"
+                    label="Community Name"/>
+	
+</design:component>

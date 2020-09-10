@@ -1,0 +1,3 @@
+<aura:event type="APPLICATION" description="Review Items data has changed">
+    <aura:attribute name="title" type="String"/>
+</aura:event>

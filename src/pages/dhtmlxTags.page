@@ -1,0 +1,114 @@
+<apex:page controller="CustomDocumentController" showHeader="false" sidebar="false">
+    <apex:includeScript value="{!URLFOR($Resource.DHTMLX, '/codebase/dhtmlx.js')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.DHTMLX, '/codebase/dhtmlx.css')}" />
+
+    <style type="text/css" media="screen">
+        html,
+        body {
+            margin: 0px;
+            padding: 0px;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        div.gridbox_material.gridbox table.obj tr td,
+        .dhx_grid_adjust,
+        .standartTreeRow {
+            font-size: 13px;
+        }
+    </style>
+
+    <body>
+        <div id="treeboxbox_tree" style='width:500px; height:220px;'></div>
+    </body>
+    <script type="text/javascript">
+        var vars = {};
+        var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
+            vars[key] = value;
+        });
+        var accId = vars["accId"];
+
+        TagTree = new dhtmlXTreeObject("treeboxbox_tree", "100%", "100%", 0);
+        TagTree.setImagePath("{!URLFOR($Resource.DHTMLX, '/skins/skyblue/imgs/dhxtree_skyblue/')}");
+        //TagTree.enableDragAndDrop(true);
+        TagTree.enableCheckBoxes(1);
+
+        CustomDocumentController.getAccountTagsRecords(accId, '', function (result, event) {
+            if (event.type == 'exception') {
+                alert(event.message);
+            } else {
+                data = result;
+                //data = ($('<div>').html(data).text());
+                console.log(data);
+                console.log(data.length);
+                var finalData = [];
+                var parents = [];
+                for (var i = 0; i < data.length; i++) {
+                    var temp = [];
+                    temp.push(data[i].Id);
+                    if (data[i].ParentTag__c != null) {
+                        temp.push(data[i].ParentTag__c);
+                        parents.push(data[i].ParentTag__c);
+                    } else {
+                        temp.push(0);
+                    }
+                    temp.push(data[i].Name);
+                    finalData.push(temp);
+                }
+                console.log(finalData);
+
+                TagTree.parse(finalData, "jsarray");
+                for (var i = 0; i < parents.length; i++)
+                    TagTree.openAllItems(parents[i]);
+
+                var dochId;
+                var vars = {};
+                var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
+                    vars[key] = value;
+                });
+                dochId = vars["id"];
+
+                CustomDocumentController.getTagsRecords(dochId, function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        data = result;
+                        //data = ($('<div>').html(data).text());
+                        console.log(data);
+                        console.log(data.length);
+                        var finalData = [];
+                        for (var i = 0; i < data.length; i++) {
+                            TagTree.setCheck(data[i].Tag__c, true);
+                        }
+                    }
+                });
+            }
+        });
+
+        TagTree.attachEvent("onCheck", function (id, state) {
+            console.log(TagTree.getAllChecked());
+            var checkedTags = [];
+            checkedTags = TagTree.getAllChecked().split(',');
+            /*for (var i=0; i<checkedTags.length;i++){
+                console.log(checkedTags[i]);
+            }*/
+            var vars = {};
+            var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
+                vars[key] = value;
+            });
+            dochId = vars["id"];
+
+            CustomDocumentController.setTagsVF(dochId, checkedTags, function (result, event) {
+                if (event.type == 'exception') {
+                    alert(event.message);
+                } else {
+                    console.log('success');
+                }
+            });
+
+        });
+
+
+
+    </script>
+</apex:page>

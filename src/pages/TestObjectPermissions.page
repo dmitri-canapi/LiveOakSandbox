@@ -1,0 +1,10 @@
+<!-- this page exists as a workaround to known issue W-2616683 where Apex can't
+    correctly determine the current user's access because it runs in system mode.
+    see https://success.salesforce.com/issues_view?id=a1p300000008djFAAQ -->
+<apex:page sidebar="false" showHeader="false" contentType="plain/text" standardStylesheets="false"> 
+    <accessible>{!$ObjectType[$CurrentPage.parameters.obj].accessible}</accessible> 
+    <createable>{!$ObjectType[$CurrentPage.parameters.obj].createable}</createable> 
+    <deletable>{!$ObjectType[$CurrentPage.parameters.obj].deletable}</deletable> 
+    <undeletable>{!$ObjectType[$CurrentPage.parameters.obj].undeletable}</undeletable> 
+    <updateable>{!$ObjectType[$CurrentPage.parameters.obj].updateable}</updateable> 
+</apex:page>

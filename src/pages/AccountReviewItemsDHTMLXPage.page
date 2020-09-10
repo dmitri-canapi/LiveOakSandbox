@@ -1,0 +1,2002 @@
+<apex:page controller="AccountReviewItemsDHTMLXController" showHeader="false" sidebar="false">
+    <apex:includeLightning />
+
+    <apex:includeScript value="{!URLFOR($Resource.jquery)}" />
+    <apex:includeScript value="{!URLFOR($Resource.DHTMLX, '/codebase/dhtmlx.js')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.DHTMLX, '/skins/material/dhtmlx.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.DHTMLX, '/skins/terrace/dhtmlx.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.DHTMLX, '/skins/web/dhtmlx.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.DHTMLX, '/skins/skyblue/dhtmlx.css')}" />
+
+    <body>
+        <div id="DDlayoutObj" style="width: 100%;"></div>
+        <div id="layoutObj" class="layoutObj" style="width: calc(100% - 1px); margin-top:65px"></div>
+        <!-- div style="width: 100%;float:left">
+            <div id="layoutObj" style="width: calc(100% - 250px); display:inline-block;"></div>
+            <div id="descriptionDiv" style="width: 240px;  display: inline-block; vertical-align: top;">
+                some text
+            </div>
+        </div-->
+        <div id="instructionsDiv" style="height: 100%;background: #eeeeee;   padding: 0px 15px; overflow-y: auto;"></div>
+        <div id="submitFormDiv" style="height:40px; width:100%"></div>
+        <!--div style="width:100%;min-height:50%;" id="docTab"></div-->
+        <div id="RIinfo">
+            <div id="RIinfoView" style="display: none;padding-left: 7px;line-height: 70px;"></div>
+            <div id="RIinfoEdit" style="display: none;width: 100%;padding-left: 7px;">
+                Review Item Name:
+                <input type="text" id="RInameInp" autocomplete="off" style="margin: 5px 5px 0px 10px; height: 23px; text-indent: 5px; width: calc(100% - 160px);"
+                    onkeyup="setIsChanged()" />
+            </div>
+            <div id="CatinfoEdit" style="display: none;width: 100%;padding-left: 7px;">
+                Category Name:
+                <input type="text" id="CatnameInp" autocomplete="off" style="margin: 5px 5px 0px 10px; height: 23px; text-indent: 5px; width: calc(100% - 160px);"
+                    onkeyup="setIsChanged()" />
+            </div>
+            <div id="riBanners" style="display: none;">
+                <div id="NotLinked" style="display: none;width: 100%;">
+                    <div style="background: #d9eaff;height: 30px;line-height: 28px;font-size: 12px;border-top: 1px solid #ccc;">
+                        <img style="vertical-align: middle;width: 17px;margin: 4px;" border="0" src="{!URLFOR($Resource.DHTMLX, '/customIcons/info.png')}"
+                        /> Review Item not linked to a Template.
+                    </div>
+                </div>
+                <div id="riDifferent" style="display: none;width: 100%;">
+                    <div style="background: #d9eaff;height: 30px;line-height: 28px;font-size: 12px;border-top: 1px solid #ccc;">
+                        <img style="vertical-align: middle;width: 17px;margin: 4px;" border="0" src="{!URLFOR($Resource.DHTMLX, '/customIcons/info.png')}"
+                        /> Review Item different from Template.
+                        <div style="display:inline; float: right; margin-right: 10px;">
+                            <a onclick="UpdatefromTemplate();">Update from Template</a> |
+                            <a onclick="UpdateTemplate();">Update Template</a>
+                        </div>
+                    </div>
+                </div>
+                <div id="catDifferent" style="display: none;width: 100%;">
+                    <div style="background: #d9eaff;height: 30px;line-height: 28px;font-size: 12px;border-top: 1px solid #ccc;">
+                        <img style="vertical-align: middle;width: 17px;margin: 4px;" border="0" src="{!URLFOR($Resource.DHTMLX, '/customIcons/info.png')}"
+                        /> Category different from Template.
+                        <div style="display:inline; float: right; margin-right: 10px;">
+                            <a onclick="UpdateCatfromTemplate();">Update from Template</a> |
+                            <a onclick="UpdateCatTemplate();">Update Template</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="width: 100%" id="filterDiv">
+            <input type="search" id="mixSearch" autocomplete="off" style="margin: 5px 5px 0px 10px; height: 23px; text-indent: 5px;width: calc(100% - 20px);"
+                placeHolder="Search" onsearch="setObjectsTree()" onkeyup="setObjectsTree()" />
+
+            <div style="width: 100%;float:left">
+                <div id="filterFormDiv" style="width: calc(100% - 30px); display:inline-block;width:100%"></div>
+                <div id="filterFormDivExpander" style="width: 20px;  height: 30px; display: table-cell; vertical-align: middle;position: absolute;right: 0px;top: 36px;background: white; padding: 2px;">
+                    <img style="width: 15px;" onclick="toggleFilterPanel(this);" src="{!URLFOR($Resource.DHTMLX, '/customIcons/arrDown.png')}"></img>
+                </div>
+            </div>
+        </div>
+    </body>
+
+    <script>
+
+        var selectedRIid = '';
+        var selectedTreeItem = '';
+        var hasChanges = false;
+
+        var vars = {};
+        var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
+            vars[key] = value;
+        });
+        var accId = vars["accId"];
+        var ddId = vars["ddId"];
+        var IsExternalGrader = JSON.parse(vars["IsExternalGrader"]);
+        var communityName = vars["communityName"];
+        var mode = "ReviewSubmissions";
+        var componentHeightInt = Number(vars["componentHeight"]) - 65;
+        var showDD = vars["showDD"]; console.log(showDD);
+        if (showDD == 'Yes') {
+            document.getElementById("DDlayoutObj").style.height = "200px";
+            componentHeightInt -= 200;
+        }
+        document.getElementById("layoutObj").style.height = componentHeightInt + "px";
+        //document.getElementById("docTab").style.height = componentHeightInt - 45 + "px";
+        //document.getElementById("docGridDiv").style.height = componentHeightInt - 90 + "px";
+        var dhtmlxSkin = vars["skin"];
+        if (!dhtmlxSkin) {
+            dhtmlxSkin = 'terrace';
+        }
+
+        var lSkin = "dhx_" + dhtmlxSkin;
+
+        var ReviewerCommentsEditor;
+        var submitterCommentsEditor;
+        var descEditor;
+        var catEditor;
+        var assetsNeededEditor;
+
+        var ddGrid;
+        var ddName;
+
+        var parentUrl = (window.location != window.parent.location) ? document.referrer : document.location.href;
+        sendToParent('setBaseUrl', document.location.href);
+
+        window.addEventListener("message", function (event) {
+
+            var pass_data = JSON.parse(event.data);
+            if (pass_data.func)
+                if (pass_data.func == 'updateGrid') {
+                    getRIData(selectedRIid);
+                } else if (pass_data.func == 'updateDDGrid') {
+                    updateDDGrid();
+                } else if (pass_data.func == 'changeViewStyle') {
+                    mode = pass_data.style;
+                    myTabbar.tabs("itemDescription").hide();
+
+
+                    if (mode == 'ReviewSubmissions') {
+                        mainLayout.cells("b").expand();
+                        myTabbar.tabs("assets").hide();
+
+                        myTabbar.tabs("itemDescription").hide();
+                        myTabbar.tabs("categoryDescription").hide();
+
+                        if (communityName != '') {
+                            myTabbar.tabs("intReview").show();
+                            myTabbar.tabs("docs").show();
+                            myTabbar.tabs("submComments").show(true);
+                        } else {
+                            myTabbar.tabs("intReview").show(true);
+                            myTabbar.tabs("docs").show();
+                            myTabbar.tabs("submComments").show();
+                        }
+                        $("#RIinfoEdit").hide();
+                        $("#CatinfoEdit").hide();
+                        $("#RIinfoView").show();
+                        filterForm.showItem("Pending");
+                        filterForm.showItem("InFile");
+                        filterForm.showItem("InProcess");
+                        filterForm.showItem("Complete");
+                        filterForm.showItem("Deferred");
+                        filterForm.hideItem("addRI");
+                        filterForm.hideItem("deleteRI");
+                        $("#filterFormDivExpander").show();
+                        $("#riBanners").hide();
+                        Form.showItem("markComplete");
+                        if (ObjectsTree.getParentId(ObjectsTree.getSelectedItemId()) == 0) {
+
+                            if (ddGrid.cells(ddId, 5).getValue() > 0) {
+                                ObjectsTree.selectItem(selectedRIid, true);
+                            } else {
+                                ddGrid.forEachRow(function (id) {
+                                    var rowFounded = false
+                                    if (ddGrid.cells(id, 5).getValue() > 0 && !rowFounded) {
+                                        ddGrid.selectRowById(id, false, true, true);
+                                        rowFounded = true;
+                                    }
+                                });
+                            }
+
+                        }
+                        /*var list = ObjectsTree.getAllSubItems(0);
+                        var items = list.split(",");
+                        for (var i = 0; i < items.length; i++) {
+                            console.log('font-weight: 100;');
+                            ObjectsTree.setItemStyle(items[i], 'font-weight: 100 !important;');
+                        }*/
+                        setObjectsTree();
+
+                    } else {
+
+                        mainLayout.cells("b").collapse();
+                        myTabbar.tabs("intReview").hide("itemDescription");
+                        myTabbar.tabs("docs").hide("itemDescription");
+                        myTabbar.tabs("submComments").hide("itemDescription");
+
+
+                        filterForm.hideItem("Pending");
+                        filterForm.hideItem("InFile");
+                        filterForm.hideItem("InProcess");
+                        filterForm.hideItem("Complete");
+                        filterForm.hideItem("Deferred");
+                        if (ObjectsTree.getParentId(ObjectsTree.getSelectedItemId()) == 0) {
+                            filterForm.hideItem("addRI");
+                            filterForm.hideItem("deleteRI");
+                            filterForm.showItem("addCategory");
+                            filterForm.showItem("deleteCategory");
+                            myTabbar.tabs("assets").hide();
+                            myTabbar.tabs("itemDescription").hide();
+                            myTabbar.tabs("categoryDescription").show(true);
+                            $("#RIinfoView").hide();
+                            $("#RIinfoEdit").hide();
+                            $("#CatinfoEdit").show();
+                            $("#CatnameInp").val(ObjectsTree.getSelectedItemId());
+
+                        } else {
+                            filterForm.hideItem("addCategory");
+                            filterForm.hideItem("deleteCategory");
+                            filterForm.showItem("addRI");
+                            filterForm.showItem("deleteRI");
+
+
+                            myTabbar.tabs("assets").show();
+                            console.log('itemDescriptionactive');
+                            myTabbar.tabs("itemDescription").setActive();
+                            myTabbar.tabs("itemDescription").show();
+                            myTabbar.tabs("categoryDescription").hide();
+                            myTabbar.tabs("itemDescription").show(true);
+                            $("#RIinfoView").hide();
+                            $("#CatinfoEdit").hide();
+                            $("#RIinfoEdit").show();
+                            $("#riBanners").show();
+                        }
+                        $("#filterFormDivExpander").hide();
+                        Form.hideItem("markComplete");
+
+                        var list = ObjectsTree.getAllSubItems(0);
+                        var items = list.split(",");
+                        for (var i = 0; i < items.length; i++) {
+                            ObjectsTree.setItemStyle(items[i], 'color: black;');
+                            if (ObjectsTree.getUserData(items[i], 'hasDiff')) {
+                                ObjectsTree.setItemStyle(items[i], 'font-weight: 700 !important;');
+                            } else {
+                                ObjectsTree.setItemStyle(items[i], 'font-weight: 100 !important;');
+                            }
+                        }
+
+                    }
+                    filterDDrows();
+
+
+
+
+                } else if (pass_data.func == 'checkChangesBeforeShowingPopup') {
+                    if (hasChanges) {
+                        showConfirmation('showNewDDpopup');
+                    } else {
+                        sendToParent('showNewDDpopup');
+                    }
+                } else if (pass_data.func == 'sendUpdateAllTemplates') {
+                    updateAllTemplates();
+                } else if (pass_data.func == 'DownloadCSV') {
+                    downloadCSV();
+                }
+        }, false);
+
+        if (dhtmlxSkin == 'material') {
+            lSkin = dhtmlxSkin;
+            var sheet = document.createElement('style')
+            sheet.innerHTML = ".dhxgrid_sort_desc, .dhxgrid_sort_asc {width:0px;} .selectedTreeRow {background-color: transparent;}";
+            document.body.appendChild(sheet);
+        }
+
+
+        if (showDD == 'Yes') {
+            var DDLayout = new dhtmlXLayoutObject({
+                parent: "DDlayoutObj",
+                pattern: '1C',
+                skin: lSkin
+            });
+            DDLayout.cells("a").hideHeader();
+
+            ddGrid = DDLayout.cells("a").attachGrid();
+
+            ddGrid.setHeader("Description,TYPE,<div style='text-align: center'>Date</div>,Name,Review Status,<div style='text-align: center'>Review Item Total</div>,<div style='text-align: center'>Review Items Open</div>,Actions,#cspan");
+            ddGrid.setInitWidths("*,*,95,95,130,*,*,39,38");
+            ddGrid.setColumnMinWidth(150, 5);
+            ddGrid.setColumnMinWidth(155, 6);
+            ddGrid.setColAlign("left,left,center,left,left,center,center,left,left");
+            ddGrid.setColTypes("ro,ro,ro,link,ro,ro,ro,img,img");
+            ddGrid.setColSorting("str,str,date,str,str,int,int,str,str");
+            ddGrid.setImagePath("{!URLFOR($Resource.DHTMLX)}" + '/skins/' + dhtmlxSkin + '/imgs/dhxgrid_' + dhtmlxSkin + '/');
+            ddGrid.setIconsPath("{!URLFOR($Resource.DHTMLX, '/customIcons/')}");
+            ddGrid.init();
+
+            if (communityName != '') {
+                ddGrid.setColumnHidden(7, true);
+                ddGrid.setColumnHidden(8, true);
+            }
+
+            updateDDGrid();
+
+            ddGrid.attachEvent("onRowSelect", function (id, ind) {
+                /*if (ind == 6 || ind == 7) {
+                    return false;
+                }*/
+                ddId = id;
+                setObjectsTree();
+            });
+
+            ddGrid.attachEvent("onBeforeSelect", function (new_row, old_row, new_col_index) {
+
+                if (new_col_index == 7 || new_col_index == 8) {
+                    return false;
+                }
+                if (hasChanges) {
+                    showConfirmation(new_row);
+                    return false;
+                }
+
+                return true;
+            });
+
+
+
+
+        }
+
+        var mainLayout = new dhtmlXLayoutObject({
+            parent: "layoutObj",
+            pattern: '2U',
+            skin: lSkin
+        });
+        mainLayout.cells("b").setWidth(300);
+        mainLayout.cells("a").hideHeader();
+        mainLayout.cells("b").hideHeader();
+        mainLayout.cells("b").hideArrow();
+        mainLayout.cells("b").setText("&nbsp;");
+        mainLayout.cells("b").attachObject("instructionsDiv");
+        console.log(mainLayout.listAutoSizes());
+        mainLayout.setAutoSize("a", "a;b");
+
+
+        var myLayout = mainLayout.cells("a").attachLayout("3T");
+
+        /*var myLayout = new dhtmlXLayoutObject({
+            parent: "layoutObj",
+            pattern: '3T',
+            skin: lSkin
+        });*/
+
+
+        myLayout.cells("b").setWidth(250);
+        myLayout.cells("b").setText("Categories and Review Items");
+        myLayout.cells("a").hideHeader();
+        myLayout.cells("a").setHeight(70);
+        myLayout.cells("c").hideHeader();
+        myLayout.cells("a").fixSize(false, true);
+
+        myLayout.attachEvent("onPanelResizeFinish", function (names) {
+            topLayout.cells("a").setWidth(myLayout.cells("b").getWidth());
+        });
+
+        var topLayout = myLayout.cells("a").attachLayout("2U");
+        topLayout.cells("a").setWidth(250);
+        topLayout.cells("a").hideHeader();
+        topLayout.cells("b").hideHeader();
+        topLayout.cells("a").fixSize(true, true);
+        topLayout.cells("a").attachObject("filterDiv");
+        topLayout.cells("b").attachObject("RIinfo");
+
+        var filterFormDivData = [
+            { type: "checkbox", label: "Pending", name: "Pending", checked: true, position: "label-right" }, { type: "newcolumn" },
+            { type: "checkbox", label: "In File", name: "InFile", checked: true, position: "label-right" }, { type: "newcolumn" },
+            { type: "checkbox", label: "In Process", name: "InProcess", checked: true, position: "label-right" }, { type: "newcolumn" },
+            { type: "checkbox", label: "Complete", name: "Complete", checked: true, position: "label-right" }, { type: "newcolumn" },
+            { type: "checkbox", label: "Deferred", name: "Deferred", checked: true, position: "label-right" }, { type: "newcolumn" },
+            { type: "button", value: 'Add Review Item', name: 'addRI', hidden: true, size: "small", width: "103", offsetLeft: 10 }, { type: "newcolumn" },
+            { type: "button", value: 'Delete Review Item', name: 'deleteRI', hidden: true, size: "small", width: "115" }, { type: "newcolumn" },
+            { type: "button", value: 'Add Category', name: 'addCategory', hidden: true, size: "small", width: "103", offsetLeft: 10 }, { type: "newcolumn" },
+            { type: "button", value: 'Delete Category', name: 'deleteCategory', hidden: true, size: "small", width: "115" }
+        ];
+        var filterForm = new dhtmlXForm("filterFormDiv", filterFormDivData);
+        filterForm.setSkin(lSkin);
+        filterForm.attachEvent("onChange", function (name, value, state) {
+            setObjectsTree();
+        });
+        filterForm.attachEvent("onButtonClick", function (name) {
+            if (name == 'deleteRI') {
+                if (selectedRIid == '') {
+                    dhtmlx.message({
+                        type: "error",
+                        text: "Please, select a Review Item."
+                    });
+                } else {
+                    var r = confirm("Do you really want delete this Review Item record?");
+                    if (r == true) {
+                        AccountReviewItemsDHTMLXController.removeRIById(selectedRIid, function (result, event) {
+                            if (event.type == 'exception') {
+                                alert(event.message);
+                            } else {
+                                setObjectsTree();
+                                if (showDD == 'Yes') {
+                                    updateDDGrid();
+                                }
+                            }
+                        });
+                    }
+                }
+
+            } else if (name == 'addRI') {
+                //sendToParent("openNewRICreatingPopup", ddId);
+                openAddReviewItemWindow();
+            } else if (name == 'deleteCategory') {
+                var r = confirm("Do you really want delete this Category? It will delete all Review Items in it.");
+                if (r == true) {
+                    AccountReviewItemsDHTMLXController.removeCategoryByName(ObjectsTree.getSelectedItemId(), ddId, function (result, event) {
+                        if (event.type == 'exception') {
+                            alert(event.message);
+                        } else {
+                            setObjectsTree();
+                            if (showDD == 'Yes') {
+                                updateDDGrid();
+                            }
+                        }
+                    });
+                }
+            } else if (name == 'addCategory') {
+                openAddCatWindow();
+            }
+        });
+
+
+        //myLayout.cells("c").attachObject("RIDetailForm");
+
+        //myLayout.cells("b").setText("Review Items");
+        //myLayout.setAutoSize("a;b;c", "a;b;c");
+
+        /* tree configuring */
+
+        TreeMenu = new dhtmlXMenuObject();
+        TreeMenu.renderAsContextMenu();
+        TreeMenu.attachEvent("onClick", TreeMenuHandler);
+        TreeMenu.loadStruct('{items:[{id: "MoveUp", text: "Move Up"},{id: "MoveDown", text: "Move Down"},{id:"AddReviewItem",text:"Add Review Item"},{id:"DeleteReviewItem",text:"Delete Review Item"},{id:"AddCategory",text:"Add Category"},{id:"DeleteCategory",text:"Delete Category"}]}');
+        TreeMenu.addNewSeparator("MoveDown", "sep");
+        ObjectsTree = myLayout.cells("b").attachTree();
+        ObjectsTree.setImagePath("{!URLFOR($Resource.DHTMLX)}" + '/skins/' + dhtmlxSkin + '/imgs/dhxtree_' + dhtmlxSkin + '/');
+        ObjectsTree.enableDragAndDrop(true);
+        ObjectsTree.setDragBehavior("sibling");
+        ObjectsTree.enableContextMenu(TreeMenu);
+        //ObjectsTree.setOnClickHandler(getRIData);
+
+        ObjectsTree.attachEvent("onBeforeContextMenu", function (id) {
+            if (communityName != '' || (communityName == '' && mode == 'ReviewSubmissions')) {
+                return false;
+            }
+            ObjectsTree.selectItem(id, true);
+            var index = ObjectsTree.getIndexById(id);
+            if (ObjectsTree.getLevel(id) == 1) {
+                var items = ObjectsTree.getAllItemsWithKids().split(",");
+                if (index == 0) {
+                    TreeMenu.hideItem('MoveUp');
+                } else {
+                    TreeMenu.showItem('MoveUp');
+                }
+                if (index == items.length - 1) {
+                    TreeMenu.hideItem('MoveDown');
+                } else {
+                    TreeMenu.showItem('MoveDown');
+                }
+                TreeMenu.showItem('AddCategory');
+                TreeMenu.showItem('DeleteCategory');
+                TreeMenu.hideItem('AddReviewItem');
+                TreeMenu.hideItem('DeleteReviewItem');
+            } else {
+                var items = ObjectsTree.getSubItems(ObjectsTree.getParentId(id)).split(",");
+                if (index == 0) {
+                    TreeMenu.hideItem('MoveUp');
+                } else {
+                    TreeMenu.showItem('MoveUp');
+                }
+                if (index == items.length - 1) {
+                    TreeMenu.hideItem('MoveDown');
+                } else {
+                    TreeMenu.showItem('MoveDown');
+                }
+                TreeMenu.showItem('AddReviewItem');
+                TreeMenu.showItem('DeleteReviewItem');
+                TreeMenu.hideItem('AddCategory');
+                TreeMenu.hideItem('DeleteCategory');
+            }
+            return true;
+        });
+
+        ObjectsTree.attachEvent("onSelect", function (id) {
+            if (hasChanges) {
+                showConfirmation();
+                //getRIData(selectedRIid);
+                return false;
+            }
+            getRIData(id);
+        });
+
+        ObjectsTree.attachEvent("onBeforeDrag", function (sId) {
+            if (mode == 'ReviewSubmissions') {
+                return false;
+            } else {
+                return true;
+            }
+        });
+
+        ObjectsTree.attachEvent("onDrop", function (sId, tId, id, sObject, tObject) {
+            if (tId == 'Board_Meetings__r' || tId == 'Contacts' || tId == 'Opportunities' || tId == 'Investment__r' || tId == 'Investments__r' || tId == 'Documents') {
+                dhtmlx.message({
+                    type: "error",
+                    text: "Please, move the document(s) to the correct parent object."
+                });
+            } else {
+                console.log(ObjectsTree.getAllSubItems(0));
+                AccountReviewItemsDHTMLXController.updatePriorities(ObjectsTree.getAllSubItems(0), function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        setObjectsTree(sId);
+                    }
+                });
+            }
+            //}
+            return false;
+        });
+
+        ObjectsTree.attachEvent("onDrag", function (sId, tId, id, sObject, tObject) {
+            console.log('source' + sId);
+            console.log('id' + id);
+            console.log('tar' + tId);
+            if (ObjectsTree.getLevel(sId) == 1 && (ObjectsTree.getLevel(id) == 2)) {
+                return false;
+            }
+            return true;
+
+        });
+
+        function TreeMenuHandler(menuitemId, type) {
+            var treeId = ObjectsTree.contextID;
+            if (menuitemId == 'MoveUp') {
+                console.log(treeId);
+                if (ObjectsTree.getParentId(treeId) == 0) {
+                    var items = ObjectsTree.getAllItemsWithKids().split(",");
+                    for (var i = 0; i < items.length; i++) {
+                        if (items[i] == treeId) {
+                            ObjectsTree.moveItem(treeId, 'item_sibling', items[i - 1]);
+                            break;
+                        }
+                    }
+                } else {
+
+                    ObjectsTree.moveItem(treeId, 'up_strict');
+                }
+            } else if (menuitemId == 'MoveDown') {
+                if (ObjectsTree.getParentId(treeId) == 0) {
+                    var items = ObjectsTree.getAllItemsWithKids().split(",");
+                    for (var i = 0; i < items.length; i++) {
+                        if (items[i] == treeId) {
+                            ObjectsTree.moveItem(treeId, 'item_sibling_next', items[i + 1]);
+                            break;
+                        }
+                    }
+                } else {
+                    ObjectsTree.moveItem(treeId, 'down_strict');
+                }
+            } else if (menuitemId == 'AddReviewItem') {
+                openAddReviewItemWindow();
+            } else if (menuitemId == 'DeleteReviewItem') {
+                var r = confirm("Do you really want delete this Review Item record?");
+                if (r == true) {
+                    AccountReviewItemsDHTMLXController.removeRIById(selectedRIid, function (result, event) {
+                        if (event.type == 'exception') {
+                            alert(event.message);
+                        } else {
+                            setObjectsTree();
+                            if (showDD == 'Yes') {
+                                updateDDGrid();
+                            }
+                        }
+                    });
+                }
+            } else if (menuitemId == 'AddCategory') {
+                openAddCatWindow();
+            } else if (menuitemId == 'DeleteCategory') {
+                var r = confirm("Do you really want delete this Category? It will delete all Review Items in it.");
+                if (r == true) {
+                    AccountReviewItemsDHTMLXController.removeCategoryByName(ObjectsTree.getSelectedItemId(), ddId, function (result, event) {
+                        if (event.type == 'exception') {
+                            alert(event.message);
+                        } else {
+                            setObjectsTree();
+                            if (showDD == 'Yes') {
+                                updateDDGrid();
+                            }
+                        }
+                    });
+                }
+            }
+        }
+
+        var tabsAndFormLayout = myLayout.cells("c").attachLayout("2E");
+        tabsAndFormLayout.cells("a").hideHeader();
+        tabsAndFormLayout.cells("b").setHeight(30);
+        tabsAndFormLayout.cells("b").hideHeader();
+        tabsAndFormLayout.cells("b").fixSize(false, true);
+
+        tabsAndFormLayout.cells("b").attachObject("submitFormDiv");
+
+        var myTabbar = tabsAndFormLayout.cells("a").attachTabbar();
+        //myTabbar.setSkin(dhtmlxSkin);
+        myTabbar.addTab("categoryDescription", "Category Description", null, null, false, false);
+        myTabbar.addTab("itemDescription", "Item Description", null, null, false, false);
+        myTabbar.addTab("assets", "Assets needed", null, null, false, false);
+        if (communityName != '') {
+            if (IsExternalGrader) {
+                myTabbar.addTab("intReview", "Internal Review", null, null, true, false);
+                myTabbar.addTab("submComments", "Submitter Comments", null, null, false, false);
+                myTabbar.addTab("docs", "Linked Documents", null, null, false, false);
+            } else {
+                myTabbar.addTab("submComments", "Submitter Comments", null, null, true, false);
+                myTabbar.addTab("docs", "Linked Documents", null, null, false, false);
+                myTabbar.addTab("intReview", "Internal Review", null, null, false, false);
+                myTabbar.tabs("intReview").hide();
+            }
+
+        } else {
+            myTabbar.addTab("intReview", "Internal Review", null, null, true, false);
+            myTabbar.addTab("submComments", "Submitter Comments", null, null, false, false);
+            myTabbar.addTab("docs", "Linked Documents", null, null, false, false);
+        }
+
+        myTabbar.setArrowsMode("auto");
+        myTabbar.tabs("itemDescription").hide();
+        myTabbar.tabs("assets").hide();
+        myTabbar.tabs("categoryDescription").hide();
+
+
+        myTabbar.attachEvent("onSelect", function (id, lastId) {
+            showConfirmation();
+            return true;
+        });
+
+        //var ldGrid = myTabbar.tabs("docs").attachGrid();
+        descEditor = myTabbar.tabs("itemDescription").attachEditor({ toolbar: true, iconsPath: "{!URLFOR($Resource.DHTMLX, '/skins/terrace/imgs')}" });
+        descEditor.setSkin(lSkin);
+        descEditor.attachEvent("onAccess", function (eventName, evObj) {
+            if (eventName == "keydown") {
+                hasChanges = true;
+            }
+        });
+        descEditor.attachEvent("onToolbarClick", function (name) {
+            hasChanges = true;
+        });
+
+        //hasChanges
+
+        catEditor = myTabbar.tabs("categoryDescription").attachEditor({ toolbar: true, iconsPath: "{!URLFOR($Resource.DHTMLX, '/skins/terrace/imgs')}" });
+        catEditor.setSkin(lSkin);
+        catEditor.attachEvent("onAccess", function (eventName, evObj) {
+            if (eventName == "keydown") {
+                hasChanges = true;
+            }
+        });
+        catEditor.attachEvent("onToolbarClick", function (name) {
+            hasChanges = true;
+        });
+
+        submitterCommentsEditor = myTabbar.tabs("submComments").attachEditor({ toolbar: true, iconsPath: "{!URLFOR($Resource.DHTMLX, '/skins/terrace/imgs')}" });
+        submitterCommentsEditor.setSkin(lSkin);
+        /*if (communityName == '') {
+            submitterCommentsEditor.setReadonly(true);
+        }*/
+        submitterCommentsEditor.attachEvent("onAccess", function (eventName, evObj) {
+            if (eventName == "keydown" /*&& communityName != ''*/) {
+                hasChanges = true;
+            }
+        });
+        submitterCommentsEditor.attachEvent("onToolbarClick", function (name) {
+            hasChanges = true;
+        });
+
+        assetsNeededEditor = myTabbar.tabs("assets").attachEditor({ toolbar: true, iconsPath: "{!URLFOR($Resource.DHTMLX, '/skins/terrace/imgs')}" });
+        assetsNeededEditor.setSkin(lSkin);
+        assetsNeededEditor.attachEvent("onAccess", function (eventName, evObj) {
+            if (eventName == "keydown") {
+                hasChanges = true;
+            }
+        });
+        assetsNeededEditor.attachEvent("onToolbarClick", function (name) {
+            hasChanges = true;
+        });
+
+
+        var intReviewLayout = myTabbar.tabs("intReview").attachLayout('2E');
+        intReviewLayout.setSkin(lSkin);
+
+        intReviewLayout.cells("a").hideHeader();
+        intReviewLayout.cells("b").setText("Reviwer Comments");
+        intReviewLayout.cells("b").hideArrow();
+        intReviewLayout.cells("a").setHeight(50);
+        intReviewLayout.cells("a").fixSize(false, true);
+
+        var intReviewForm = intReviewLayout.cells("a").attachForm([
+            {
+                type: "block", style: "margin: 0px 0px 0px 0px;", list: [
+                    { type: "settings", position: "label-left" },
+                    { type: "select", offsetLeft: 5, labelWidth: 95, inputWidth: 110, name: "ItemGrading", id: "ItemGrading", label: "Item Grading", value: "", options: [{ value: "", text: "" }, { value: "1", text: "1" }, { value: "2", text: "2" }, { value: "3", text: "3" }] },
+                    { type: "newcolumn", offsetLeft: 40 },
+                    { type: "select", offsetLeft: 40, labelWidth: 55, inputWidth: 110, name: "Status", id: "Status", label: "Status", value: "", options: [{ value: "", text: "" }, { value: "Pending", text: "Pending" }, { value: "In File", text: "In File" }, { value: "In Process", text: "In Process" }, { value: "Complete", text: "Complete" }, { value: "Deferred", text: "Deferred" }] },
+                ]
+            }
+        ]);
+
+        intReviewForm.attachEvent("onChange", function (name, value, state) {
+            hasChanges = true;
+            return true;
+        });
+
+        ReviewerCommentsEditor = intReviewLayout.cells("b").attachEditor({ toolbar: true, iconsPath: "{!URLFOR($Resource.DHTMLX, '/skins/terrace/imgs')}" });
+        ReviewerCommentsEditor.setSkin(lSkin);
+        ReviewerCommentsEditor.attachEvent("onAccess", function (eventName, evObj) {
+            if (eventName == "keydown") {
+                hasChanges = true;
+            }
+        });
+
+        ReviewerCommentsEditor.attachEvent("onToolbarClick", function (name) {
+            hasChanges = true;
+        });
+
+
+
+        //myTabbar.tabs("docs").attachObject("docTab");
+
+        /*var docsLayout = new dhtmlXLayoutObject({
+            parent: "docTab",
+            pattern: '2E',
+            skin: lSkin
+        });*/
+        /*var docsLayout = myTabbar.tabs("docs").attachLayout({
+            parent: "docTab",
+            pattern: '2E',
+            skin: lSkin
+        });*/
+        var docsLayout = myTabbar.tabs("docs").attachLayout('2E');
+        docsLayout.setSkin(lSkin);
+
+
+        docsLayout.cells("a").hideHeader();
+        docsLayout.cells("b").hideHeader();
+        docsLayout.cells("a").setHeight(50);
+        docsLayout.cells("a").fixSize(false, true);
+        //var disableLinkDocButton = communityName == '' ? true : false;
+
+        var docFormData = [
+            { type: "button", value: 'Link Document...', name: 'link'/*, disabled: disableLinkDocButton*/ }
+        ];
+        var DocForm = docsLayout.cells("a").attachForm(docFormData);
+        DocForm.setSkin(lSkin);
+        DocForm.attachEvent("onButtonClick", function (name) {
+            if (name == 'link') {
+                openLinkDocWindow();
+            }
+        });
+
+        function eXcell_tags(cell) { //the eXcell name is defined here
+
+            if (cell) {
+                this.cell = cell;
+                this.grid = this.cell.parentNode.grid;
+            }
+            this.edit = function () { }  //read-only cell doesn't have edit method
+            // the cell is read-only, so it's always in the disabled state
+            this.isDisabled = function () { return true; }
+            this.setValue = function (val) {
+                var CellObj = this;
+                var userdata = ldGrid.getUserData(val, "Tags");
+                if (userdata) {
+                    console.log(JSON.parse(ldGrid.getUserData(val, "Tags")));
+                    var tags = JSON.parse(ldGrid.getUserData(val, "Tags"));
+
+                    var tagsBadges = "<div id='tags2-" + val + "'>";
+                    for (var i = 0; i < tags.length; i++) {
+                        tagsBadges += "<span style='display:none'>" + tags[i].Tag__r.Name + "</span><span id='" + tags[i].Id + "' class='notification' style=''><span>" + tags[i].Tag__r.Name + "</span>";
+                        tagsBadges += " </span>";
+                    }
+                    tagsBadges += " </div>";
+
+                    CellObj.setCValue(tagsBadges, val);
+                }
+
+
+            }
+        }
+        eXcell_tags.prototype = new eXcell;// nests all other methods from the base class
+
+        function custom_1(a, b, ord, a_id, b_id) {
+            a = myGrid.cells(a_id, 8).getValue();
+            b = myGrid.cells(b_id, 8).getValue();
+            return ord == "asc" ? (a > b ? 1 : -1) : (a > b ? -1 : 1);
+        };
+
+
+        var ldGrid = docsLayout.cells("b").attachGrid();
+
+        ldGrid.setHeader("TYPE,Title,Tags,Notes,Actions,#cspan");
+        ldGrid.setInitWidths("48,*,*,*,39,38");
+        ldGrid.setColAlign("center,left,left,left,left,left");
+        ldGrid.setColTypes("img,link,tags,ro,img,img");
+        ldGrid.setColSorting("str,str,str,str,str,str");
+        ldGrid.setImagePath("{!URLFOR($Resource.DHTMLX)}" + '/skins/' + dhtmlxSkin + '/imgs/dhxgrid_' + dhtmlxSkin + '/');
+        ldGrid.setIconsPath("{!URLFOR($Resource.DHTMLX, '/customIcons/')}");
+        ldGrid.setCustomSorting(custom_1, 3);
+        ldGrid.init();
+
+        function getRIData(id) {
+            selectedTreeItem = id;
+            console.log(ObjectsTree.getParentId(id));
+            if (ObjectsTree.getParentId(id) == 0) {
+
+                $("#catDifferent").hide();
+                $("#riDifferent").hide();
+                $("#NotLinked").hide();
+                $("#RIinfo").css("line-height", "70px");
+
+                if (mode == 'EditReviewItems') {
+                    filterForm.hideItem("addRI");
+                    filterForm.hideItem("deleteRI");
+                    filterForm.showItem("addCategory");
+                    filterForm.showItem("deleteCategory");
+                    myTabbar.tabs("assets").hide();
+                    myTabbar.tabs("itemDescription").hide();
+                    myTabbar.tabs("categoryDescription").show(true);
+                    $("#RIinfoView").hide();
+                    $("#RIinfoEdit").hide();
+                    $("#CatinfoEdit").show();
+                    $("#CatnameInp").val(id);
+                    console.log(id);
+                    console.log(ObjectsTree.getUserData(id, 'hasDiff'));
+                    if (ObjectsTree.getUserData(id, 'hasDiff')) {
+                        $("#RIinfo").css("line-height", "40px");
+                        $("#catDifferent").show();
+                    }
+                } else {
+                    ObjectsTree.selectItem(selectedRIid, true);
+                }
+
+                AccountReviewItemsDHTMLXController.GetCategoryData(id, ddId, function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        console.log(result);
+                        if (result != null) {
+                            var t = ($('<div>').html(result).text());
+                            catEditor.setContent(t);
+                        } else {
+                            catEditor.setContent('');
+                        }
+
+                    }
+                });
+
+            } else {
+                if (mode == 'EditReviewItems') {
+                    filterForm.hideItem("addCategory");
+                    filterForm.hideItem("deleteCategory");
+                    filterForm.showItem("addRI");
+                    filterForm.showItem("deleteRI");
+                    myTabbar.tabs("categoryDescription").hide();
+                    myTabbar.tabs("assets").show();
+                    myTabbar.tabs("itemDescription").show(true);
+                    $("#RIinfoView").hide();
+                    $("#CatinfoEdit").hide();
+                    $("#RIinfoEdit").show();
+                    $("#riBanners").show();
+                }
+                Form.enableItem("markComplete");
+                selectedRIid = id;
+                myLayout.cells("c").progressOn();
+                AccountReviewItemsDHTMLXController.GetRIData(id, function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        console.log(result);
+                        var data = result;
+                        //var data = ($('<div>').html(data).text());
+                        //var selectedId = myGrid.getSelectedRowId();
+                        ldGrid.clearAll();
+                        ldGrid.parse($('<div>').html(data.gridData).text(), "json");
+
+
+
+                        $("#RIinfoView").html(data.reviewItem.Review_Item_Name__c + ' ' + (data.reviewItem.Review_Date__c ? ' Date: ' + new Date(data.reviewItem.Review_Date__c).toLocaleDateString("en-US") : '') + (data.reviewItem.Review_Item_Status__c ? ' Status: ' + data.reviewItem.Review_Item_Status__c : ''));
+                        $("#RInameInp").val(data.reviewItem.Review_Item_Name__c);
+                        if (mode == "ReviewSubmissions") {
+                            $("#RIinfoEdit").hide();
+                            $("#RIinfoView").show();
+                        } else {
+                            $("#RIinfoView").hide();
+                            $("#RIinfoEdit").show();
+                        }
+                        var instructions = '';
+
+                        instructions += '<div class="instructionHeader">Category Description</div>';
+                        var t = data.reviewItem.Item_Category_Description__c ? ($('<div>').html(data.reviewItem.Item_Category_Description__c).text()) : data.reviewItem.Item_Category__c ? data.reviewItem.Item_Category__c : 'other';
+                        instructions += t;
+
+                        instructions += '<div class="instructionHeader">Item Description</div>';
+                        if (data.reviewItem.Item_Description__c) {
+                            var t = ($('<div>').html(data.reviewItem.Item_Description__c).text());
+                            descEditor.setContent(t);
+                            instructions += t;
+                        } else {
+                            descEditor.setContent('');
+                            var t = data.reviewItem.Review_Item_Name__c;
+                            instructions += t;
+                        }
+
+                        instructions += '<div class="instructionHeader">Assets Needed</div>';
+                        if (data.reviewItem.Assets_Needed__c) {
+                            var t = ($('<div>').html(data.reviewItem.Assets_Needed__c).text());
+                            assetsNeededEditor.setContent(t);
+                            instructions += t;
+                        } else {
+                            assetsNeededEditor.setContent('');
+                            instructions += 'Attach relevant documents as needed';
+                        }
+
+                        instructions += '<br/><br/>';
+                        $("#instructionsDiv").html(instructions);
+
+                        if (data.reviewItem.Reviewer_Comments__c) {
+                            var t = ($('<div>').html(data.reviewItem.Reviewer_Comments__c).text());
+                            ReviewerCommentsEditor.setContent(t);
+                        } else {
+                            ReviewerCommentsEditor.setContent('');
+                        }
+                        if (data.reviewItem.Item_Comments__c) {
+                            var t = ($('<div>').html(data.reviewItem.Item_Comments__c).text());
+                            submitterCommentsEditor.setContent(t);
+                        } else {
+                            submitterCommentsEditor.setContent('');
+                        }
+                        if (data.reviewItem.Item_Grading__c) {
+                            var t = ($('<div>').html(data.reviewItem.Item_Grading__c).text());
+                            intReviewForm.setItemValue("ItemGrading", t);
+                        } else {
+                            intReviewForm.setItemValue("ItemGrading", "");
+                        }
+                        if (data.reviewItem.Review_Item_Status__c) {
+                            var t = ($('<div>').html(data.reviewItem.Review_Item_Status__c).text());
+                            intReviewForm.setItemValue("Status", t);
+                            if (communityName != '' && t == 'In File') {
+                                Form.disableItem("markComplete");
+                            } else if (communityName == '' && t == 'Complete') {
+                                Form.disableItem("markComplete");
+                            }
+                        } else {
+                            intReviewForm.setItemValue("Status", "");
+                        }
+
+
+
+                        if (!data.reviewItem.Template__c) {
+                            $("#RIinfo").css("line-height", "40px");
+                            $("#NotLinked").show();
+                            $("#riDifferent").hide();
+                        } else {
+                            $("#NotLinked").hide();
+                            if (data.reviewItem.Template__r.Item_Assets__c != data.reviewItem.Assets_Needed__c || data.reviewItem.Template__r.Item_Description__c != data.reviewItem.Item_Description__c || data.reviewItem.Template__r.Name != data.reviewItem.Review_Item_Name__c) {
+                                $("#RIinfo").css("line-height", "40px");
+                                $("#riDifferent").show();
+                            } else {
+                                $("#RIinfo").css("line-height", "70px");
+                            }
+                        }
+                        myLayout.cells("c").progressOff();
+
+                    }
+                });
+            }
+            /*if (id && id.includes('--cat--')) {
+                myLayout.cells("b").progressOn();
+                console.log(id);
+                var DDid = id.split("--cat--")[0];
+                var category = id.split("--cat--")[1];
+
+                AccountReviewItemsDHTMLXController.GetRIFiltered(DDid, category, function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        var data = result;
+                        data = ($('<div>').html(data).text());
+                        var selectedId = myGrid.getSelectedRowId();
+                        myGrid.clearAll();
+                        myGrid.parse(data, "json");
+                        if (selectedId && myGrid.doesRowExist(selectedId)) {
+                            myGrid.selectRowById(selectedId, false, true, true);
+                        } else {
+                            myGrid.selectRow(0, true);
+                        }
+                        //
+
+                    }
+                });
+
+                myLayout.cells("b").progressOff();
+            }*/
+
+
+        }
+        function setObjectsTree(rowForSelect) {
+            Form.disableItem("markComplete");
+            Form.disableItem("save");
+            //myLayout.cells("b").progressOn();
+            var chxs = filterForm.getFormData();
+            var activeStatuses = [];
+            if (chxs.Pending) {
+                activeStatuses.push('Pending');
+            }
+            if (chxs.InProcess) {
+                activeStatuses.push('In Process');
+            }
+            if (chxs.InFile) {
+                activeStatuses.push('In File');
+            }
+            if (chxs.Complete) {
+                activeStatuses.push('Complete');
+            }
+            if (chxs.Deferred) {
+                activeStatuses.push('Deferred');
+            }
+
+            console.log('ddid--------------- ' + ddId);
+            AccountReviewItemsDHTMLXController.GetReviewItemsList(ddId, JSON.stringify(activeStatuses), $('#mixSearch').val(), function (result, event) {
+                if (event.type == 'exception') {
+                    alert(event.message);
+                } else {
+                    console.log(result);
+                    ddName = result.ddType ? result.ddType : 'Untitled DD Checklist';
+                    sendToParent('setDDNameLabel', ddName);
+
+
+
+                    if (result.riList.length > 0) {
+                        const ritemsWithDiff = new Set();
+                        const catsWithDiff = new Set();
+                        const completedRI = new Set();
+                        const pendingRI = new Set();
+
+                        var firstRI = '';
+
+                        var finalData = [];
+                        var t = [];
+                        var parents = []
+
+                        const cats = new Set();
+                        for (let c of result.riList) {
+                            if (c.Item_Category__c) {
+                                cats.add($('<div>').html(c.Item_Category__c).text());
+                            } else {
+                                cats.add('other');
+                            }
+                        }
+
+                        if (cats.size > 0) {
+                            for (let cat of cats) {
+                                t = [];
+                                t.push(cat);
+                                t.push(0);
+                                t.push(cat);
+                                finalData.push(t);
+                            }
+                        }
+                        for (let c of result.riList) {
+                            t = [];
+                            if (c.Item_Category__c) {
+                                t.push(c.Id);
+                                t.push($('<div>').html(c.Item_Category__c).text());
+                                t.push(c.Review_Item_Name__c ? c.Review_Item_Name__c : c.Name);
+                            } else {
+                                t.push(c.Id);
+                                t.push('other');
+                                t.push(c.Review_Item_Name__c ? c.Review_Item_Name__c : c.Name);
+                            }
+                            finalData.push(t);
+                            if (firstRI == '') {
+                                firstRI = c.Id;
+                            }
+
+                            if (c.Template__c) {
+                                if (decodeHTMLString(c.Template__r.Item_Assets__c) != decodeHTMLString(c.Assets_Needed__c) || decodeHTMLString(c.Template__r.Item_Description__c) != decodeHTMLString(c.Item_Description__c) || decodeHTMLString(c.Template__r.Name) != decodeHTMLString(c.Review_Item_Name__c)) {
+                                    ritemsWithDiff.add(c.Id);
+                                }
+                                if (decodeHTMLString(c.Template__r.Review_Category__c) != decodeHTMLString(c.Item_Category__c) || decodeHTMLString(c.Template__r.Category_Description__c) != decodeHTMLString(c.Item_Category_Description__c)) {
+                                    catsWithDiff.add(c.Id);
+                                    console.log(c.Template__r);
+                                    console.log(c);
+                                }
+                            }
+
+                            if (c.Review_Item_Status__c && (c.Review_Item_Status__c == 'Complete' || c.Review_Item_Status__c == 'Deferred')) {
+                                completedRI.add(c.Id);
+                            }
+                            if (c.Review_Item_Status__c && c.Review_Item_Status__c == 'Pending') {
+                                pendingRI.add(c.Id);
+                            }
+                        }
+
+                        ObjectsTree.deleteChildItems(0);
+                        ObjectsTree.parse(finalData, "jsarray");
+
+                        for (let treeItem of ritemsWithDiff) {
+                            ObjectsTree.setUserData(treeItem, 'hasDiff', true);
+                            if (mode == 'EditReviewItems') {
+                                ObjectsTree.setItemStyle(treeItem, 'font-weight: 700 !important;');
+                            }
+                        }
+                        for (let cat of catsWithDiff) {
+                            ObjectsTree.setUserData(ObjectsTree.getParentId(cat), 'hasDiff', true);
+                            if (mode == 'EditReviewItems') {
+                                ObjectsTree.setItemStyle(ObjectsTree.getParentId(cat), 'font-weight: 700 !important;');
+                            }
+                        }
+                        for (let ri of completedRI) {
+                            if (mode == 'ReviewSubmissions') {
+                                ObjectsTree.setItemStyle(ri, 'color: green');
+                            }
+                        }
+                        for (let ri of pendingRI) {
+                            if (mode == 'ReviewSubmissions') {
+                                ObjectsTree.setItemStyle(ri, 'font-weight: 700 !important;');
+                            }
+                        }
+
+
+
+                        filterForm.enableItem("deleteCategory");
+                        ObjectsTree.openAllItems(0);
+                        if (rowForSelect && ObjectsTree.getIndexById(rowForSelect) != null) {
+                            ObjectsTree.selectItem(rowForSelect, true, false);
+                        } else {
+                            if (selectedRIid != '' && ObjectsTree.getIndexById(selectedRIid) != null) {
+                                ObjectsTree.selectItem(selectedRIid, true, false);
+                            } else if (firstRI != '') {
+                                ObjectsTree.selectItem(firstRI, true, false);
+                            }
+                        }
+                        Form.enableItem("markComplete");
+                        Form.enableItem("save");
+
+                        $("#CatnameInp").prop("disabled", false);
+                    } else {
+                        ObjectsTree.deleteChildItems(0);
+                        /*dhtmlx.message({
+                            type: "error",
+                            expire: 6000,
+                            text: "No matches found for such filter parameters. Please change or clear your search string / enable additional statuses to see review items."
+                        });*/
+                        if (mode == 'EditReviewItems') {
+                            filterForm.hideItem("addRI");
+                            filterForm.hideItem("deleteRI");
+                            filterForm.showItem("addCategory");
+                            filterForm.showItem("deleteCategory");
+                            filterForm.disableItem("deleteCategory");
+                            myTabbar.tabs("assets").hide();
+                            myTabbar.tabs("itemDescription").hide();
+                            myTabbar.tabs("categoryDescription").hide();
+                            $("#RIinfoView").hide();
+                            $("#RIinfoEdit").hide();
+                            $("#CatinfoEdit").show();
+                            $("#CatnameInp").val('');
+                            $("#CatnameInp").prop("disabled", true);
+                            //catEditor.setReadonly(true)
+
+                        } else {
+                            if (ddId && ddGrid.cells(ddId, 5).getValue() == 0) {
+                                dhtmlx.message({
+                                    type: "error",
+                                    expire: 6000,
+                                    text: 'There are no Review Items in this Checklist. Switch to "Edit Review Items" mode to add Review Items.'
+                                });
+                                $("#RIinfoView").html('');
+                                $("#instructionsDiv").html('');
+                                ReviewerCommentsEditor.setContent('');
+                                submitterCommentsEditor.setContent('');
+                                catEditor.setContent('');
+                                intReviewForm.setItemValue("ItemGrading", "");
+                                intReviewForm.setItemValue("Status", "");
+                                $("#RIinfo").css("line-height", "40px");
+                                $("#NotLinked").show();
+                                $("#riDifferent").hide();
+
+                            }
+                        }
+                        //myLayout.cells("b").progressOff();
+                    }
+                }
+            });
+        }
+
+
+        /* tree configuring end */
+
+
+
+        var formData = [
+            { type: "button", value: 'Cancel', hidden: true, name: 'cancel' },
+            { type: "newcolumn" },
+            { type: "button", value: 'Mark Complete', name: 'markComplete' },
+            { type: "newcolumn" },
+            { type: "button", value: 'Save', name: 'save' }
+        ];
+        var Form = new dhtmlXForm("submitFormDiv", formData);
+        Form.setSkin(lSkin);
+        Form.attachEvent("onButtonClick", function (name) {
+            if (name == 'save') {
+                saveChanges();
+            } else if (name == 'markComplete') {
+                AccountReviewItemsDHTMLXController.setCompleted(selectedRIid, function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        //getRIData(selectedRIid);
+                        setObjectsTree();
+                        dhtmlx.message({
+                            type: "NotifyMessage",
+                            text: 'Review Item was marked as completed.'
+                        })
+
+                    }
+                });
+            }
+        });
+
+        setObjectsTree();
+
+        function removeJunc(docId) {
+            AccountReviewItemsDHTMLXController.removeJunctionObjectById(selectedRIid + docId, function (result, event) {
+                if (event.type == 'exception') {
+                    alert(event.message);
+                } else {
+                    ldGrid.deleteRow(docId);
+                }
+            });
+        }
+
+        function removeDD(ddId) {
+            var r = confirm("Do you really want delete this Due Diligence Checklist record?");
+            if (r == true) {
+                AccountReviewItemsDHTMLXController.removeDDById(ddId, function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        ddGrid.deleteRow(ddId);
+                    }
+                });
+            }
+        }
+
+        function updateDDGrid() {
+            console.log('upddd----' + accId);
+            AccountReviewItemsDHTMLXController.GetAllDDchecklists(accId, function (result, event) {
+                if (event.type == 'exception') {
+                    alert(event.message);
+                } else {
+                    var data = result;
+                    data = ($('<div>').html(data).text());
+
+                    ddGrid.clearAll();
+                    ddGrid.parse(data, "json");
+
+                    filterDDrows();
+
+                    if (ddId) {
+                        ddGrid.selectRowById(ddId, false, true, true);
+                    }
+                }
+            });
+        }
+
+        function toggleFilterPanel(e) {
+            e.classList.toggle("rotatedImg");
+            if (e.classList.contains('rotatedImg')) {
+                myLayout.cells("a").setHeight(95);
+                $("#RIinfo").css("line-height", "95px");
+            } else {
+                myLayout.cells("a").setHeight(70);
+                $("#RIinfo").css("line-height", "70px");
+            }
+            myLayout.cells("b").setWidth(topLayout.cells("a").getWidth());
+        }
+
+        function openAddReviewItemWindow() {
+            var dhxWins = new dhtmlXWindows();
+            dhxWins.attachViewportTo("layoutObj");
+            dhxWins.setSkin(lSkin);
+            advancedEditWin = dhxWins.createWindow("w1", 0, 0, 400, 200);
+            advancedEditWin.setText("Add Review Item");
+            advancedEditWin.center();
+            advancedEditWin.setModal(true);
+            advancedEditWin.button("park").hide();
+            advancedEditWin.button("minmax").hide();
+            advancedEditWin.denyResize();
+            var advancedEditWinLayout = advancedEditWin.attachLayout("1C");
+
+            advancedEditWinLayout.cells("a").hideHeader();
+            advancedEditWinLayout.setSkin(lSkin);
+
+            var formContent = [{ type: "block", list: [{ type: "input", label: "Review Item Name", name: 'Name', maxLength: 255, required: true, skin: lSkin, width: 240, offsetLeft: 40, offsetTop: 20 }] },
+            { type: "block", list: [{ type: "button", name: "save", value: "Save", offsetTop: 10, width: 80, offsetLeft: 70 }, { type: "newcolumn" }, { type: "button", name: "cancel", value: "Cancel", offsetTop: 10, width: 80, offsetLeft: 20 }] }
+            ];
+
+            var advancedEditWinForm = advancedEditWinLayout.cells("a").attachForm(formContent);
+
+            advancedEditWinForm.attachEvent("onEnter", function () {
+                if (advancedEditWinForm.validate()) {
+                    AccountReviewItemsDHTMLXController.createReviewItem(advancedEditWinForm.getItemValue('Name'), ddId, ObjectsTree.getParentId(selectedTreeItem), function (result, event) {
+                        if (event.type == 'exception') {
+                            alert(event.message);
+                        } else {
+                            advancedEditWin.close();
+                            setObjectsTree();
+
+                        }
+                    });
+                }
+            });
+
+            advancedEditWinForm.attachEvent("onButtonClick", function (name) {
+                if (advancedEditWinForm.validate() && name == 'save') {
+
+                    AccountReviewItemsDHTMLXController.createReviewItem(advancedEditWinForm.getItemValue('Name'), ddId, ObjectsTree.getParentId(selectedTreeItem), function (result, event) {
+                        if (event.type == 'exception') {
+                            alert(event.message);
+                        } else {
+                            setObjectsTree();
+                            advancedEditWin.close();
+                        }
+                    });
+
+                } else if (name == 'cancel') {
+                    advancedEditWin.close();
+                }
+            });
+
+        }
+
+        function openAddCatWindow() {
+
+            var dhxWins = new dhtmlXWindows();
+            dhxWins.attachViewportTo("layoutObj");
+            dhxWins.setSkin(lSkin);
+            advancedEditWin = dhxWins.createWindow("w1", 0, 0, 400, 200);
+            advancedEditWin.setText("Add Category");
+            advancedEditWin.center();
+            advancedEditWin.setModal(true);
+            advancedEditWin.button("park").hide();
+            advancedEditWin.button("minmax").hide();
+            advancedEditWin.denyResize();
+            var advancedEditWinLayout = advancedEditWin.attachLayout("1C");
+
+            advancedEditWinLayout.cells("a").hideHeader();
+            advancedEditWinLayout.setSkin(lSkin);
+
+            var formContent = [{ type: "block", list: [{ type: "input", label: "Category Name", name: 'Name', maxLength: 255, required: true, skin: lSkin, width: 240, offsetLeft: 40, offsetTop: 20 }] },
+            { type: "block", list: [{ type: "button", name: "save", value: "Save", offsetTop: 10, width: 80, offsetLeft: 70 }, { type: "newcolumn" }, { type: "button", name: "cancel", value: "Cancel", offsetTop: 10, width: 80, offsetLeft: 20 }] }
+            ];
+
+            var advancedEditWinForm = advancedEditWinLayout.cells("a").attachForm(formContent);
+
+            advancedEditWinForm.attachEvent("onEnter", function () {
+                if (advancedEditWinForm.validate()) {
+                    AccountReviewItemsDHTMLXController.createCategory(advancedEditWinForm.getItemValue('Name'), ddId, function (result, event) {
+                        if (event.type == 'exception') {
+                            alert(event.message);
+                        } else {
+                            advancedEditWin.close();
+                            setObjectsTree();
+
+                            if (showDD == 'Yes') {
+                                updateDDGrid();
+                            }
+
+                        }
+                    });
+                }
+            });
+
+
+            advancedEditWinForm.attachEvent("onButtonClick", function (name) {
+                if (advancedEditWinForm.validate() && name == 'save') {
+
+                    AccountReviewItemsDHTMLXController.createCategory(advancedEditWinForm.getItemValue('Name'), ddId, function (result, event) {
+                        if (event.type == 'exception') {
+                            alert(event.message);
+                        } else {
+                            setObjectsTree();
+
+                            if (showDD == 'Yes') {
+                                updateDDGrid();
+                            }
+                            advancedEditWin.close();
+                        }
+                    });
+
+                } else if (name == 'cancel') {
+                    advancedEditWin.close();
+                }
+            });
+        }
+
+        function showConfirmation(cb) {
+            if (hasChanges) {
+                hasChanges = false;
+                dhtmlx.confirm({
+                    title: "Confirm",
+                    text: "Save changes?",
+                    cancel: "No",
+                    ok: "Yes",
+                    callback: function (res) {
+                        if (res) {
+                            saveChanges();
+                            if (cb) {
+                                if (cb == 'showNewDDpopup') {
+                                    sendToParent('showNewDDpopup');
+                                } else {
+                                    ddGrid.selectRowById(cb, false, true, true);
+                                }
+                            }
+                        } else {
+                            if (cb) {
+                                if (cb == 'showNewDDpopup') {
+                                    sendToParent('showNewDDpopup');
+                                } else {
+                                    ddGrid.selectRowById(cb, false, true, true);
+                                }
+                            } else {
+                                getRIData(ObjectsTree.getSelectedItemId());
+                            }
+                        }
+                    }
+                });
+            }
+
+        }
+
+        function setIsChanged() {
+            hasChanges = true;
+        }
+
+        function saveChanges() {
+            hasChanges = false;
+            if (ObjectsTree.getParentId(selectedTreeItem) == 0) {
+                AccountReviewItemsDHTMLXController.setCatData(selectedTreeItem, catEditor.getContent(), $("#CatnameInp").val(), ddId, function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        //getRIData(selectedRIid);
+                        setObjectsTree(selectedTreeItem);
+                        dhtmlx.message({
+                            type: "NotifyMessage",
+                            text: 'Category successfully saved.'
+                        });
+
+                    }
+                });
+            } else {
+                AccountReviewItemsDHTMLXController.setRIData(selectedRIid, descEditor.getContent(), assetsNeededEditor.getContent(), submitterCommentsEditor.getContent(), ReviewerCommentsEditor.getContent(), intReviewForm.getItemValue("ItemGrading"), intReviewForm.getItemValue("Status"), $("#RInameInp").val(), function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        //getRIData(selectedRIid);
+                        setObjectsTree();
+                        dhtmlx.message({
+                            type: "NotifyMessage",
+                            text: 'Review Item successfully saved.'
+                        })
+
+                    }
+                });
+            }
+        }
+
+        function filterDDrows() {
+            if (communityName != '')
+                ddGrid.forEachRow(function (id) {
+                    if (ddGrid.cells(id, 5).getValue() == 0 && mode == "ReviewSubmissions") {
+                        ddGrid.setRowHidden(id, true);
+                    } else {
+                        ddGrid.setRowHidden(id, false);
+                        if (!ddId) {
+                            ddGrid.selectRowById(id, false, true, true);
+                            ddId = id;
+                        }
+                    }
+
+                });
+        }
+
+        function UpdateCatTemplate() {
+            dhtmlx.confirm({
+                title: "Confirm",
+                text: "Update Assessment Metadata with values from this Category?",
+                cancel: "No",
+                ok: "Yes",
+                callback: function (res) {
+                    if (res) {
+                        AccountReviewItemsDHTMLXController.updateCatTemplate(ObjectsTree.getSelectedItemId(), catEditor.getContent(), ddId, function (result, event) {
+                            if (event.type == 'exception') {
+                                alert(event.message);
+                            } else {
+                                setObjectsTree(ObjectsTree.getSelectedItemId());
+                            }
+                        });
+                    }
+                }
+            });
+        }
+
+        function UpdateTemplate() {
+            dhtmlx.confirm({
+                title: "Confirm",
+                text: "Update Assessment Metadata with values from this Review Item?",
+                cancel: "No",
+                ok: "Yes",
+                callback: function (res) {
+                    if (res) {
+                        AccountReviewItemsDHTMLXController.updateTemplate(selectedRIid, function (result, event) {
+                            if (event.type == 'exception') {
+                                alert(event.message);
+                            } else {
+                                setObjectsTree();
+                            }
+                        });
+                    }
+                }
+            });
+        }
+
+        function updateAllTemplates() {
+            if (ddGrid.cells(ddId, 1).getValue() != '') {
+                dhtmlx.confirm({
+                    title: "Confirm",
+                    text: "Update Assessment Metadata with values from all Review Items and Categories in this Checklist?",
+                    cancel: "No",
+                    ok: "Yes",
+                    callback: function (res) {
+                        if (res) {
+                            AccountReviewItemsDHTMLXController.updateAllTemplates(ddId, function (result, event) {
+                                if (event.type == 'exception') {
+                                    alert(event.message);
+                                } else {
+                                    setObjectsTree();
+                                }
+                            });
+                        }
+                    }
+                });
+            } else {
+                loadTemplateForCurrentDD();
+            }
+        }
+
+        function loadTemplateForCurrentDD() {
+
+            var dhxWins = new dhtmlXWindows();
+            dhxWins.attachViewportTo("layoutObj");
+            dhxWins.setSkin(lSkin);
+            advancedEditWin = dhxWins.createWindow("w1", 0, 0, 500, 250);
+            advancedEditWin.setText("Update Template");
+            advancedEditWin.center();
+            advancedEditWin.setModal(true);
+            advancedEditWin.button("park").hide();
+            advancedEditWin.button("minmax").hide();
+            advancedEditWin.denyResize();
+            var advancedEditWinLayout = advancedEditWin.attachLayout("1C");
+
+            advancedEditWinLayout.cells("a").hideHeader();
+            advancedEditWinLayout.setSkin(lSkin);
+
+            AccountReviewItemsDHTMLXController.getDDtemplates(function (result, event) {
+                if (event.type == 'exception') {
+                    alert(event.message);
+                } else {
+                    var formContent = [{
+                        type: "block", list: [{ type: "template", name: "product", label: "You are trying to update a template from a DD Checklist with no Template<br/> specified. Please select template you would like to update:" },
+                        //{ type: "input", label: "Template", name: 'Name', maxLength: 255, required: true, skin: lSkin, width: 240, offsetLeft: 70, offsetTop: 10 },
+                        { type: "select", name: "Template", id: "Template", label: "Template", required: true, skin: lSkin, width: 240, offsetLeft: 70, offsetTop: 10, options: JSON.parse($('<div>').html(result).text()) },
+                        { type: "template", name: "product", label: "Once a template is selected, Review Items and Categories from it will be<br/> added to current DD Checklist. You will then be able to modify and delete<br/> them as needed before saving changes back to the template." }
+                        ]
+                    },
+                    { type: "block", list: [{ type: "button", name: "save", value: "Proceed", offsetTop: 10, width: 80, offsetLeft: 120 }, { type: "newcolumn" }, { type: "button", name: "cancel", value: "Cancel", offsetTop: 10, width: 80, offsetLeft: 20 }] }
+                    ];
+
+                    var advancedEditWinForm = advancedEditWinLayout.cells("a").attachForm(formContent);
+
+                    advancedEditWinForm.attachEvent("onEnter", function () {
+                        if (advancedEditWinForm.validate()) {
+                            AccountReviewItemsDHTMLXController.setDDtype(advancedEditWinForm.getItemValue('Template'), ddId, function (result, event) {
+                                if (event.type == 'exception') {
+                                    alert(event.message);
+                                } else {
+                                    advancedEditWin.close();
+                                    setObjectsTree();
+
+                                    if (showDD == 'Yes') {
+                                        updateDDGrid();
+                                    }
+
+                                }
+                            });
+                        }
+                    });
+
+
+                    advancedEditWinForm.attachEvent("onButtonClick", function (name) {
+                        if (advancedEditWinForm.validate() && name == 'save') {
+
+                            AccountReviewItemsDHTMLXController.setDDtype(advancedEditWinForm.getItemValue('Template'), ddId, function (result, event) {
+                                if (event.type == 'exception') {
+                                    alert(event.message);
+                                } else {
+                                    setObjectsTree();
+
+                                    if (showDD == 'Yes') {
+                                        updateDDGrid();
+                                    }
+                                    advancedEditWin.close();
+                                }
+                            });
+
+                        } else if (name == 'cancel') {
+                            advancedEditWin.close();
+                        }
+                    });
+                }
+            });
+
+
+
+        }
+
+        function UpdateCatfromTemplate() {
+            dhtmlx.confirm({
+                title: "Confirm",
+                text: "This will replace Category Name and Category Description with values from the Template. New value will not be applied until you click Save.",
+                cancel: "No",
+                ok: "Yes",
+                callback: function (res) {
+                    if (res) {
+                        AccountReviewItemsDHTMLXController.GetCatTemplateName(ObjectsTree.getSelectedItemId(), ddId, function (result, event) {
+                            if (event.type == 'exception') {
+                                alert(event.message);
+                            } else {
+                                hasChanges = true;
+                                $("#CatnameInp").val(result.Template__r.Review_Category__c);
+                                if (result.Template__r.Category_Description__c) {
+                                    var t = ($('<div>').html(result.Template__r.Category_Description__c).text());
+                                    catEditor.setContent(t);
+                                } else {
+                                    catEditor.setContent('');
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+
+
+        }
+
+        function UpdatefromTemplate() {
+            dhtmlx.confirm({
+                title: "Confirm",
+                text: "This will replace Item Name, Description and Assets Needed with values from the Template. New values will not be applied until you click Save.",
+                cancel: "No",
+                ok: "Yes",
+                callback: function (res) {
+                    if (res) {
+                        AccountReviewItemsDHTMLXController.GetRIData(selectedRIid, function (result, event) {
+                            if (event.type == 'exception') {
+                                alert(event.message);
+                            } else {
+                                hasChanges = true;
+                                var data = result;
+                                if (data.reviewItem.Template__r.Item_Description__c) {
+                                    var t = ($('<div>').html(data.reviewItem.Template__r.Item_Description__c).text());
+                                    descEditor.setContent(t);
+                                } else {
+                                    descEditor.setContent('');
+                                }
+
+                                if (data.reviewItem.Template__r.Item_Assets__c) {
+                                    var t = ($('<div>').html(data.reviewItem.Template__r.Item_Assets__c).text());
+                                    assetsNeededEditor.setContent(t);
+                                } else {
+                                    assetsNeededEditor.setContent('');
+                                }
+                                $("#RInameInp").val(data.reviewItem.Template__r.Name);
+                            }
+                        });
+                    }
+                }
+            });
+
+
+        }
+
+        function downloadCSV() {
+            var csv = 'Id,Category,Review Item,Category Description,Review Item Description,Assets Needed,Submitter Comments,Internal Review Comments\n';
+
+            var chxs = filterForm.getFormData();
+            var activeStatuses = [];
+            if (chxs.Pending) {
+                activeStatuses.push('Pending');
+            }
+            if (chxs.InProcess) {
+                activeStatuses.push('In Process');
+            }
+            if (chxs.InFile) {
+                activeStatuses.push('In File');
+            }
+            if (chxs.Complete) {
+                activeStatuses.push('Complete');
+            }
+            if (chxs.Deferred) {
+                activeStatuses.push('Deferred');
+            }
+            AccountReviewItemsDHTMLXController.GetReviewItemsList(ddId, JSON.stringify(activeStatuses), $('#mixSearch').val(), function (result, event) {
+                if (event.type == 'exception') {
+                    alert(event.message);
+                } else {
+                    if (result.riList.length > 0) {
+                        for (let c of result.riList) {
+                            console.log(c);
+                            csv += c.Id + ',';
+                            if (c.Item_Category__c) {
+                                if (decodeHTMLString(c.Item_Category__c).includes(',')) {
+                                    csv += '"' + decodeHTMLString(c.Item_Category__c) + '",';
+                                } else {
+                                    csv += decodeHTMLString(c.Item_Category__c) + ',';
+                                }
+                            } else {
+                                csv += 'other,';
+                            }
+                            if (c.Review_Item_Name__c.includes(',')) {
+                                csv += '"' + c.Review_Item_Name__c.replace(new RegExp(" ", "g"), "") + '",';
+                            } else {
+                                csv += c.Review_Item_Name__c.replace(new RegExp(" ", "g"), "") + ',';
+                            }
+                            if (c.Item_Category_Description__c) {
+                                if (decodeHTMLString(c.Item_Category_Description__c).includes(',')) {
+                                    csv += '"' + decodeHTMLString(c.Item_Category_Description__c.replace(/\n/g, "   ")).replace(new RegExp(" ", "g"), "     ").replace(new RegExp("▪", "g"), "*") + '",';
+                                } else {
+                                    csv += decodeHTMLString(c.Item_Category_Description__c.replace(/\n/g, "   ")).replace(new RegExp(" ", "g"), "     ").replace(new RegExp("▪", "g"), "*") + ',';
+                                }
+                            } else {
+                                csv += ',';
+                            }
+                            if (c.Item_Description__c) {
+                                if (decodeHTMLString(c.Item_Description__c).includes(',')) {
+                                    //csv += '"' + c.Item_Description__c + '",';
+                                    csv += '"' + decodeHTMLString(c.Item_Description__c.replace(/\n/g, "     ")).replace(new RegExp(" ", "g"), "     ").replace(new RegExp("▪", "g"), "*") + '",';
+                                } else {
+                                    //csv += c.Item_Description__c + ',';
+                                    csv += decodeHTMLString(c.Item_Description__c.replace(/\n/g, "     ")).replace(new RegExp(" ", "g"), "     ").replace(new RegExp("▪", "g"), "*") + ',';
+                                }
+                            } else {
+                                csv += ',';
+                            }
+                            if (c.Assets_Needed__c) {
+                                if (decodeHTMLString(c.Assets_Needed__c).includes(',')) {
+                                    csv += '"' + decodeHTMLString(c.Assets_Needed__c.replace(/\n/g, "   ")).replace(new RegExp(" ", "g"), "     ").replace(new RegExp("▪", "g"), "*") + '",';
+                                } else {
+                                    csv += decodeHTMLString(c.Assets_Needed__c.replace(/\n/g, "   ")).replace(new RegExp(" ", "g"), "     ").replace(new RegExp("▪", "g"), "*") + ',';
+                                }
+                            } else {
+                                csv += ',';
+                            }
+
+                            if (c.Item_Comments__c) {
+                                if (decodeHTMLString(c.Item_Comments__c).includes(',')) {
+                                    csv += '"' + decodeHTMLString(c.Item_Comments__c) + '",';
+                                } else {
+                                    csv += decodeHTMLString(c.Item_Comments__c) + ',';
+                                }
+                            } else {
+                                csv += ',';
+                            }
+                            if (c.Reviewer_Comments__c) {
+                                if (decodeHTMLString(c.Reviewer_Comments__c).includes(',')) {
+                                    csv += '"' + decodeHTMLString(c.Reviewer_Comments__c) + '",';
+                                } else {
+                                    csv += decodeHTMLString(c.Reviewer_Comments__c) + ',';
+                                }
+                            } else {
+                                csv += ',';
+                            }
+                            csv = csv.slice(0, -1);
+                            csv += '\n';
+                        }
+                    }
+                    var hiddenElement = document.createElement('a');
+                    hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+                    hiddenElement.target = '_self'; // 
+                    hiddenElement.download = ddName + '.csv';
+                    document.body.appendChild(hiddenElement);
+                    hiddenElement.click();
+                }
+            });
+        }
+
+
+        function openLinkDocWindow(highlightedDoc) {
+            if (selectedRIid == '') {
+                dhtmlx.message({
+                    type: "error",
+                    text: "Please, select a Review Item."
+                });
+            } else {
+                var pass_data = { 'func': "link", 'RIid': selectedRIid, 'RIName': ObjectsTree.getItemText(selectedRIid), 'highlightedDoc': highlightedDoc };
+                parent.postMessage(JSON.stringify(pass_data), parentUrl);
+                parent.postMessage(JSON.stringify({ 'func': 'fakeCall' }), parentUrl); //need to do this for proper work on community
+                //sendToParent("link", selectedRIid);
+            }
+        }
+
+        function decodeHTMLString(s) {
+            return $('<div>').html($('<div>').html(s).text()).text();
+        }
+
+        function navigateTo(recId) {
+            sendToParent('navigateTo', recId);
+        }
+
+
+        function openModal(o) {
+            sendToParent('showFilePrevRI', o);
+        }
+
+        function sendToParent(method, RIid) {
+            var pass_data = { 'func': method, 'RIid': RIid };
+            parent.postMessage(JSON.stringify(pass_data), parentUrl);
+            parent.postMessage(JSON.stringify({ 'func': 'fakeCall' }), parentUrl); //need to do this for proper work on community
+        }
+
+        if (window.attachEvent)
+            window.attachEvent("onresize", resizeLayout);
+        else
+            window.addEventListener("resize", resizeLayout, false);
+
+        var t;
+
+        function resizeLayout() {
+            window.clearTimeout(t);
+            t = window.setTimeout(function () {
+                try {
+                    DDLayout.setSizes(false);
+                } catch (e) { }
+                mainLayout.setSizes(false);
+            }, 200);
+        }
+
+    </script>
+
+
+    <style>
+        .rotatedImg {
+            transform: rotate(180deg);
+        }
+
+        body {
+            overflow: hidden;
+        }
+
+        .dhxeditor_mainiframe {
+
+            padding: 5px !important;
+            width: calc(100% - 15px) !important;
+        }
+
+        #RIinfo {
+            height: 100%;
+            font-size: 14px;
+            line-height: 70px;
+            font-weight: bold;
+            /*min-height: 70px;
+            padding: 3px;
+            border-bottom: 1px solid rgb(185, 179, 179);
+            background-color: #e2efff;
+            background: linear-gradient(#e2efff, #d3e7ff);
+            background: -webkit-linear-gradient(#e2efff, #d3e7ff);
+            background-color: #f5f5f5;*/
+        }
+
+        #riTitle {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        #riDesc {
+            height: 50px;
+            overflow-y: auto;
+        }
+
+        #submitFormDiv .dhxform_base {
+            float: right;
+            margin: 5px;
+        }
+
+        .dhxlayout_base_dhx_skyblue {
+            background-color: #ffffff;
+        }
+
+        td>a>img {
+            max-height: 19px !important;
+        }
+
+        .objbox>table>tbody>tr>td:last-of-type {
+            padding-left: 10px !important;
+        }
+
+        .dhxtree_dhx_terrace span.selectedTreeRow_lor,
+        .dhxtree_dhx_terrace span.selectedTreeRow {
+            background-color: #d9eaff !important;
+        }
+
+        div.gridbox_dhx_terrace.gridbox table.obj tr.rowselected,
+        div.gridbox_dhx_terrace.gridbox table.obj tr.rowselected td,
+        div.gridbox_dhx_terrace.gridbox table.obj tr td.cellselected,
+        div.gridbox_dhx_terrace.gridbox table.obj.row20px tr.rowselected,
+        td.cellselected {
+            background: #d9eaff !important;
+        }
+
+        .notification,
+        .notification:hover,
+        .UserOrGroupSelected {
+            line-height: 0.7em;
+            text-decoration: none;
+            padding: 5px;
+            position: relative;
+            display: inline-block;
+            border-radius: 2rem!important;
+            border: 1px solid rgb(221, 219, 218);
+            background: #6fb1da;
+            color: white;
+            font-size: 12px;
+        }
+
+        .badge {
+            top: 2px;
+            border-radius: 50%;
+            text-decoration: none;
+            color: white;
+            display: inline-block;
+            text-indent: 8px;
+        }
+
+        .objbox img {
+            /*height: 17px;*/
+            opacity: 0.6;
+        }
+
+        .instructionHeader {
+            font-weight: 700;
+            margin: 15px 0px 5px 0px;
+        }
+
+        #filterFormDiv .dhxform_btn {
+            font-size: 12px;
+        }
+
+        #filterFormDiv .dhxform_item_label_left {
+            padding-top: 4px;
+        }
+
+        .layoutObj .dhx_cell_wins .dhxlayout_base_dhx_terrace div.dhx_cell_layout div.dhx_cell_cont_layout {
+            border: none !important;
+        }
+
+        .layoutObj .dhx_cell_wins .dhx_cell_hdr.dhx_cell_hdr_hidden {
+            display: none;
+        }
+
+        .dhtmlx_message_area {
+            top: 50px !important;
+        }
+
+        #riDifferent a,
+        #catDifferent a {
+            color: #437cad !important;
+            text-decoration: underline !important;
+            cursor: pointer;
+            margin: 0px 3px;
+        }
+    </style>
+
+
+</apex:page>

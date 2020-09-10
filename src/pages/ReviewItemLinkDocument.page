@@ -1,0 +1,291 @@
+<apex:page controller="Review_Items_Controller" showHeader="false" sidebar="false" standardStylesheets="true">
+    <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" />
+    <apex:includeScript value="{!URLFOR($Resource.DHTMLX, '/codebase/dhtmlx.js')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.DHTMLX, '/codebase/dhtmlx.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.DHTMLX, '/skins/terrace/dhtmlx.css')}" />
+
+    <style type="text/css" media="screen">
+        html,
+        body {
+            margin: 0px;
+            padding: 0px;
+            height: 100%;
+            overflow: hidden !important;
+        }
+
+        .dhxwins_vp_auto {
+            overflow: hidden !important;
+        }
+
+        div#layoutObj {
+            position: relative;
+            margin-left: 0px;
+            width: 100%;
+            height: 260px;
+        }
+
+        .dhx_popup_arrow_right {
+            display: none !important;
+        }
+
+        .uneven {
+            <!--background-color: #f3f3f3a1;
+            -->
+        }
+
+        .dhtmlx-NotifyMessage>div {
+            background-color: #76fbb6 !important;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .grid_hover {
+            background-color: #f9d3f136;
+        }
+
+        div.gridbox_material.gridbox table.obj tr td {
+            border-bottom: 1px solid rgb(205, 202, 202);
+        }
+
+        div.gridbox_material.gridbox table.obj tr td,
+        .dhx_grid_adjust,
+        .standartTreeRow {
+            font-size: 13px;
+        }
+
+        #toolbarDiv {
+            width: 100%;
+            position: relative;
+            background: whitesmoke;
+            height: 34px;
+            padding-left: 5px;
+            text-align: center;
+            line-height: 34px;
+            font-size: 16px;
+        }
+
+        .dhxtree_dhx_terrace span.selectedTreeRow_lor,
+        .dhxtree_dhx_terrace span.selectedTreeRow {
+            background-color: #d9eaff !important;
+        }
+
+        div.gridbox_dhx_terrace.gridbox table.obj tr.rowselected,
+        div.gridbox_dhx_terrace.gridbox table.obj tr.rowselected td,
+        div.gridbox_dhx_terrace.gridbox table.obj tr td.cellselected,
+        div.gridbox_dhx_terrace.gridbox table.obj.row20px tr.rowselected,
+        td.cellselected {
+            background: #d9eaff !important;
+        }
+
+        #submitFormDiv .dhxform_base {
+            float: right;
+            margin: 3px;
+        }
+
+        #linkInfo {
+            background: #eeeeee;
+            font-weight: bold;
+            height: 100%;
+        }
+
+        .linkInfoText {
+            padding: 5px;
+            line-height: 1.15rem;
+        }
+    </style>
+
+    <body>
+        <div id="toolbarDiv">
+            Add Notes
+        </div>
+        <div id="layoutObj"></div>
+        <div id="submitFormDiv" style="height:40px; width:100%"></div>
+
+        <div id="linkInfo">
+            <div id="docLinked" style="display:none;">
+                <div style="background: #93c47d; height: 30px; line-height: 30px; font-size: 14px;">
+                    <img style="vertical-align: middle;width: 20px; vertical-align: middle;width: 20px;margin: 5px;" border="0" src="{!URLFOR($Resource.DHTMLX, '/customIcons/link.png')}"
+                    /> Linked
+                </div>
+                <div class="linkInfoText">
+                    Document(s) linked to Review Item.
+                    <br/>Update Link Notes to the right and click "Update Note" button below to apply
+                </div>
+            </div>
+            <div id="docNotLinked">
+                <div style="background:#cccccc; height: 30px; line-height: 30px; font-size: 14px;">
+                    <img style="vertical-align: middle;width: 20px; vertical-align: middle;width: 20px;margin: 5px;transform: rotate(90deg);"
+                        border="0" src="{!URLFOR($Resource.DHTMLX, '/customIcons/broken-link.png')}" /> Not Linked
+                </div>
+                <div class="linkInfoText">
+                    Document(s) are not linked to this Review Item.
+                    <br/> Update Link Notes to the right and click "Link" button below to link selected document(s) to Review
+                    Item
+                </div>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            var url = (window.location != window.parent.location) ? document.referrer : document.location.href;
+            parent.postMessage('setBaseUrl' + '-del-' + document.location.href, url);
+
+            window.addEventListener("message", function (event) {
+
+                var pass_data = JSON.parse(event.data);
+
+                if (pass_data.func)
+                    if (pass_data.func == 'rowSelect') {
+                        selectedId = pass_data.id;
+                        getNotes(selectedId);
+                        if (selectedId == 'null') {
+                            myEditor.setReadonly(true);
+                            Form.disableItem("updateNote");
+                            Form.disableItem("link");
+                        } else {
+                            myEditor.setReadonly(false);
+                            Form.enableItem("updateNote");
+                            Form.enableItem("link");
+                        }
+
+                    }
+            }, false);
+
+            var reviewItemId;
+            var selectedId;
+            var vars = {};
+            var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
+                vars[key] = value;
+            });
+            reviewItemId = vars["id"];
+            console.log(reviewItemId);
+            console.log(vars["recordId"]);
+
+            var myLayout = new dhtmlXLayoutObject({
+                parent: "layoutObj",
+                pattern: '2U'
+            });
+            myLayout.cells("a").hideHeader();
+            myLayout.cells("b").hideHeader();
+            myLayout.cells("a").hideArrow();
+            myLayout.cells("b").hideArrow();
+            if ($("#layoutObj").width() > 1200) {
+                myLayout.cells("a").setWidth(230);
+            } else {
+                myLayout.cells("a").setWidth(180);
+            }
+            myLayout.cells("a").fixSize(true, true);
+            myLayout.cells("a").attachObject("linkInfo");
+
+            myEditor = myLayout.cells("b").attachEditor();
+            myEditor.setReadonly(true);
+            /*myEditor.attachEvent("onAccess", function (eventName, evObj) {
+                if (eventName == "keyup") {
+                    if (myEditor.getContent() == '' || myEditor.getContent() == null) {
+                        Form.disableItem("link");
+                        Form.disableItem("updateNote");
+                    } else {
+                        Form.enableItem("link");
+                        Form.enableItem("updateNote");
+                    }
+                }
+            });*/
+
+            var formData = [
+                { type: "button", value: 'Link', name: 'link', disabled: true },
+                { type: "newcolumn" },
+                { type: "button", value: 'Update Note', name: 'updateNote', hidden: true, disabled: true },
+                { type: "newcolumn" },
+                { type: "button", value: 'Close', name: 'close' }
+            ];
+            var Form = new dhtmlXForm("submitFormDiv", formData);
+            Form.setSkin('dhx_terrace');
+            Form.attachEvent("onButtonClick", function (name) {
+                if (name == 'link' || name == 'updateNote') {
+                    LinkDocToRI(name);
+                } else if (name == 'close') {
+                    closeParentPopup();
+                }
+            });
+
+
+            function getNotes(docId) {
+                myEditor.setReadonly(false);
+                Review_Items_Controller.GetDocNotes(docId, reviewItemId, function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        myEditor.setContent(($('<div>').html(result).text()));
+                        console.log(result);
+                        if (result == '' || result == null) {
+                            $("#docLinked").hide();
+                            $("#docNotLinked").show();
+                            Form.hideItem("updateNote");
+                            Form.showItem("link");
+                            //Form.disableItem("link");
+                        } else {
+                            $("#docNotLinked").hide();
+                            $("#docLinked").show();
+                            Form.showItem("updateNote");
+                            Form.hideItem("link");
+                            Form.enableItem("updateNote");
+                        }
+                    }
+                });
+            }
+
+            function LinkDocToRI(name) {
+
+                var content = myEditor.getContent();
+                console.log(content);
+                console.log(selectedId);
+                if (selectedId == 'null') {
+                    /*dhtmlx.message({
+                        type: "error",
+                        text: "Please, select a document."
+                    })*/
+                } else {
+                    console.log('ffff');
+                    console.log(reviewItemId);
+                    Review_Items_Controller.LinkDocToRI(reviewItemId, selectedId, content, function (result, event) {
+                        if (event.type == 'exception') {
+                            alert(event.message);
+                        } else {
+                            var text = '';
+                            if (name == 'link') {
+                                text = 'Document Linked to Review Item.';
+                                Form.showItem("updateNote");
+                                Form.hideItem("link");
+                                Form.enableItem("updateNote");
+                                $("#docNotLinked").hide();
+                                $("#docLinked").show();
+                            } else {
+                                text = 'Note successfully updated.';
+                            }
+                            dhtmlx.message({
+                                expire: 3500,
+                                //type: "NotifyMessage",
+                                text: text
+                            })
+                        }
+                    });
+                }
+            }
+
+            function closeParentPopup() {
+                var url = (window.location != window.parent.location) ? document.referrer : document.location.href;
+                parent.postMessage('CloseLightningPopupFromVF', url);
+            }
+
+
+        </script>
+
+
+    </body>
+
+</apex:page>

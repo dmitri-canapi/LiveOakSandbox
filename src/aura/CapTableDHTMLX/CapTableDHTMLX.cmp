@@ -1,0 +1,233 @@
+<aura:component controller="CapTableDHTMLXController" implements="flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes">
+
+    <!-- attributes -->
+    <aura:attribute name="recordId" type="Id"/>
+    <aura:attribute name="hasRounds" type="Boolean"/>
+    <aura:attribute name="isAllowEditing" type="Boolean"/>
+    <aura:attribute name="isCommunityUser" type="Boolean"/>
+    
+    <aura:attribute name="skin" type="String" default="skyblue"/>
+    <aura:attribute name="communityName" type="String"/>
+    <aura:attribute name="componentHeight" type="String" default="400"/>
+    
+    <aura:attribute name="BaseUrl" type="String" />
+	
+    <aura:attribute name="showNewShareholder" type="Boolean" default="false"/>
+    <aura:attribute name="showNewRound" type="Boolean" default="false"/>
+    
+    <aura:attribute name="cont" type="Contact" 
+               default="{ 'sobjectType': 'Contact','AccountId':'' }"/>
+    <aura:attribute name="acc" type="Account" 
+               default="{ 'sobjectType': 'Account','Name':'' ,'RecordTypeId':''}"/>
+    <aura:attribute name="series" type="Round__c" 
+               default="{ 'sobjectType': 'Round__c','Target_Company__c':'','Share_Price__c':null,
+                        'Shares_Outstanding_Pre_round__c':null,'Series_Type__c':'','Pre_Money_Valuation__c':null,
+                        'Stage__c':'','Post_Money_Valuation__c':null,'Close_Date__c':null,'Target_Amount__c':null,
+                        'Announcement_Date__c':null,'Par_Value__c':null,'Liquidation_Preference__c':null,
+                        'Participating__c':false,'voting__c':false,'Promote_Series__c':false,'Promote_Series__c':false}"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.setHasRounds}"/>
+    
+    <aura:registerEvent name="ChangeFilter" type="c:Cap_ChangeFilter"/>
+    <aura:handler name="addRecord" event="c:Cap_AddRecord" action="{!c.showNewRecord}"></aura:handler>
+	
+    <aura:if isTrue="{!v.hasRounds}">
+        <div class="slds-box">
+        <article class="slds-card">
+            <div class="slds-card__header slds-grid">
+                <header class="slds-media slds-media_center slds-has-flexi-truncate">
+                    <div class="slds-media__body">
+                        <h2 class="slds-card__header-title" style="width: 200px; display: inline-block;">
+                            <span class="slds-card__header-link slds-text-heading--small">Cap Table Details</span>
+                        </h2>
+                    </div>
+                </header>
+            </div>
+            <div class="slds-card__body">
+                <div aura:id="detailTabsDiv" class="hidden ">
+                    <aura:if isTrue="{!v.isCommunityUser}">
+                        <iframe id="vfFrame" aura:id="vfFrame" style="{! 'border: none;min-height:' + v.componentHeight + 'px;width: 100%;'}" src="{! '/' +v.communityName + '/apex/CapTableDHTMLXPage?recordId=' + v.recordId + '&amp;isCommunity=' + v.isCommunityUser + '&amp;skin=' + v.skin + '&amp;communityName=' + v.communityName + '&amp;componentHeight=' + v.componentHeight + '&amp;isAllowEditing=' + v.isAllowEditing}"/>
+                        <aura:set attribute="else">
+                            <iframe id="vfFrame" aura:id="vfFrame" style="{! 'border: none;min-height:' + v.componentHeight + 'px;width: 100%;'}" src="{!'/apex/CapTableDHTMLXPage?recordId=' + v.recordId + '&amp;isCommunity=' + v.isCommunityUser + '&amp;skin=' + v.skin + '&amp;communityName=' + v.communityName + '&amp;componentHeight=' + v.componentHeight + '&amp;isAllowEditing=' + v.isAllowEditing}"/>
+                        </aura:set>
+                    </aura:if>
+                </div>
+            </div>
+        </article>
+            </div>
+        <aura:set attribute="else">
+            <div class="slds-align_absolute-center" style="height:10rem">
+            	Not Available
+            </div>
+        </aura:set>
+    </aura:if>
+    
+    
+    
+    
+
+    <aura:if isTrue="{!v.showNewShareholder}">
+        <!--###### MODAL BOX Start######--> 
+            <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <!-- ###### MODAL BOX HEADER Start ######-->
+                    <header class="slds-modal__header">
+                        <lightning:buttonIcon iconName="utility:close"
+                                              onclick="{! c.closeModal }"
+                                              alternativeText="close"
+                                              variant="bare-inverse"
+                                              class="slds-modal__close"/>
+                        <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Add New Shareholder to Cap Table</h2>
+                    </header>
+                    <!--###### MODAL BOX BODY Part Start######-->
+                    <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1" style="min-height:250px">
+                        
+                         <lightning:recordEditForm aura:id="selectAccForm" objectApiName="Contact">
+                            <lightning:messages />
+                             <div class="slds-grid slds-gutters">
+                                 <div class="slds-col slds-size_5-of-6" >
+                                    <lightning:inputField name="AccountId" aura:id="AccountId" class="label-hidden AccountId" fieldName="AccountId"  value="{!v.cont.AccountId}"/>
+                                 </div>
+                                 <div class="slds-col slds-size_1-of-6">
+                                     <lightning:button variant="neutral"  label="Add" title="Add" onclick="{! c.showAddForm }"/>
+                                 </div>
+                             </div>
+                        </lightning:recordEditForm>
+                        
+                        
+                        <lightning:recordEditForm aura:id="NewAccForm" objectApiName="Account" class="slds-hide">
+                            <lightning:messages />
+                            <lightning:layout multipleRows="true">
+                                <lightning:layoutItem size="12">
+                                    Type in the name to create new Account:
+                                    <lightning:inputField fieldName="Name" class="label-hidden" aura:id="NewAccountName" value="{!v.acc.Name}" />
+                                </lightning:layoutItem>
+                                
+                            </lightning:layout>
+                        </lightning:recordEditForm>    
+                            <lightning:messages />
+                        
+                        <br/><br/>
+                    </div>
+                    <!--###### MODAL BOX FOOTER Part Start ######-->
+                    <footer class="slds-modal__footer">
+                        <lightning:button variant="neutral" 
+                                          label="Cancel"
+                                          title="Cancel"
+                                          onclick="{! c.closeModal }"/>
+                        <lightning:button variant="brand" 
+                                          label="Save"
+                                          title="Save"
+                                          onclick="{! c.saveShareholder }"/>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+            <!--###### MODAL BOX Part END Here ######-->
+ 
+        </aura:if>
+    <aura:if isTrue="{!v.showNewRound}">
+          <!--###### MODAL BOX Start######--> 
+            <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <!-- ###### MODAL BOX HEADER Start ######-->
+                    <header class="slds-modal__header">
+                        <lightning:buttonIcon iconName="utility:close"
+                                              onclick="{! c.closeModal }"
+                                              alternativeText="close"
+                                              variant="bare-inverse"
+                                              class="slds-modal__close"/>
+                        <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Add New Series to Cap Table</h2>
+                    </header>
+                    <!--###### MODAL BOX BODY Part Start######-->
+                    <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1" style="min-height:250px">
+                        <lightning:messages />
+                         <lightning:recordEditForm objectApiName="Round__c">
+                            <lightning:messages />
+                                 <div class="slds-grid slds-gutters">
+                                     <div class="slds-col slds-size_3-of-6">
+                                          <lightning:inputField disabled="true" fieldName="Target_Company__c"  value="{!v.series.Target_Company__c}"/>
+                                     </div>
+                                     <div class="slds-col slds-size_3-of-6">
+                                          <lightning:input label="Share Price" type="number" step="0.0001"   fieldName="Share_Price__c"  value="{!v.series.Share_Price__c}"/>
+                                     </div>
+                                 </div>
+                             <div class="slds-grid slds-gutters">
+                                 <div class="slds-col slds-size_3-of-6">
+                                     <lightning:inputField  fieldName="Series_Type__c"  value="{!v.series.Series_Type__c}"/>
+                                 </div>
+                                  <div class="slds-col slds-size_3-of-6">
+                                     <lightning:inputField  fieldName="Shares_Outstanding_Pre_round__c"  value="{!v.series.Shares_Outstanding_Pre_round__c}"/>
+                                 </div>
+                             </div>
+                             <div class="slds-grid slds-gutters">
+                                 <div class="slds-col slds-size_3-of-6">
+                                     <lightning:inputField  fieldName="Liquidation_Preference__c"  value="{!v.series.Liquidation_Preference__c}"/>
+                                 </div>
+                                  <div class="slds-col slds-size_3-of-6">
+                                     <lightning:inputField  fieldName="Pre_Money_Valuation__c"  value="{!v.series.Pre_Money_Valuation__c}"/>
+                                 </div>
+                             </div>
+                             <div class="slds-grid slds-gutters">
+                                 <div class="slds-col slds-size_3-of-6">
+                                     <lightning:inputField  fieldName="Stage__c"  value="{!v.series.Stage__c}"/>
+                                 </div>
+                                  <div class="slds-col slds-size_3-of-6">
+                                     <lightning:inputField  fieldName="Post_Money_Valuation__c"  value="{!v.series.Post_Money_Valuation__c}"/>
+                                 </div>
+                             </div>
+                             <div class="slds-grid slds-gutters">
+                                 <div class="slds-col slds-size_3-of-6">
+                                     <lightning:input label="Close Date" type="date" value="{!v.series.Close_Date__c}"  />
+                                 </div>
+                                  <div class="slds-col slds-size_3-of-6">
+                                     <lightning:inputField  fieldName="Target_Amount__c"  value="{!v.series.Target_Amount__c}"/>
+                                 </div>
+                             </div>
+                             <div class="slds-grid slds-gutters">
+                                 <div class="slds-col slds-size_3-of-6">
+                                     <lightning:input label="Announcement Date" type="date" value="{!v.series.Announcement_Date__c}"  />
+                                 </div>
+                                  <div class="slds-col slds-size_3-of-6">
+                                     <lightning:input label="Par Value" type="number" step="0.0001" fieldName="Par_Value__c" value="{!v.series.Par_Value__c}"/>
+                                 </div>
+                             </div>
+                             <div class="slds-grid slds-gutters">
+                                 <div class="slds-col slds-size_3-of-6">
+                                     <lightning:inputField  fieldName="Participating__c"  value="{!v.series.Participating__c}"/>
+                                 </div>
+                                  <div class="slds-col slds-size_3-of-6">
+                                     <lightning:inputField  fieldName="voting__c"  value="{!v.series.voting__c}"/>
+                                 </div>
+                             </div>
+                             <div class="slds-grid slds-gutters">
+                                 <div class="slds-col slds-size_3-of-6">
+                                     <lightning:inputField  fieldName="Promote_Series__c"  value="{!v.series.Promote_Series__c}"/>
+                                 </div>
+                             </div>
+                        </lightning:recordEditForm>
+    
+                        <br/><br/>
+                    </div>
+                    <!--###### MODAL BOX FOOTER Part Start ######-->
+                    <footer class="slds-modal__footer">
+                        <lightning:button variant="neutral" 
+                                          label="Cancel"
+                                          title="Cancel"
+                                          onclick="{! c.closeModal }"/>
+                        <lightning:button variant="brand" 
+                                          label="Save"
+                                          title="Save"
+                                          onclick="{! c.saveSeries }"/>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+            <!--###### MODAL BOX Part END Here ######-->
+            
+            
+    </aura:if>
+    
+    
+    
+</aura:component>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fields>
+        <fullName>Allow_edits_by_community_users__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Allow edits by community users</label>
+        <trackFeedHistory>false</trackFeedHistory>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Total_Dollars_Across_Rounds__c</fullName>
+        <externalId>false</externalId>
+        <label>Total Dollars Across Series</label>
+        <summarizedField>Round__c.Total_Committed__c</summarizedField>
+        <summaryForeignKey>Round__c.Target_Company__c</summaryForeignKey>
+        <summaryOperation>sum</summaryOperation>
+        <type>Summary</type>
+    </fields>
+    <fields>
+        <fullName>Total_NonVoting_Shares_Across_Series__c</fullName>
+        <externalId>false</externalId>
+        <label>Total NonVoting Shares Across Series</label>
+        <summarizedField>Round__c.Total_Committed_NonVoting_Shares__c</summarizedField>
+        <summaryForeignKey>Round__c.Target_Company__c</summaryForeignKey>
+        <summaryOperation>sum</summaryOperation>
+        <type>Summary</type>
+    </fields>
+    <fields>
+        <fullName>Total_Shares_Across_Rounds__c</fullName>
+        <externalId>false</externalId>
+        <label>Total Voting Shares Across Series</label>
+        <summarizedField>Round__c.Total_Invest_Shares__c</summarizedField>
+        <summaryForeignKey>Round__c.Target_Company__c</summaryForeignKey>
+        <summaryOperation>sum</summaryOperation>
+        <type>Summary</type>
+    </fields>
+    <fields>
+        <fullName>Total_Sum_Shares_Across_Series__c</fullName>
+        <externalId>false</externalId>
+        <label>Total Sum Shares Across Series</label>
+        <summarizedField>Round__c.Total_Committed_Sum_Shares__c</summarizedField>
+        <summaryForeignKey>Round__c.Target_Company__c</summaryForeignKey>
+        <summaryOperation>sum</summaryOperation>
+        <type>Summary</type>
+    </fields>
+</CustomObject>

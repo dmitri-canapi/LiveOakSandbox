@@ -1,0 +1,19 @@
+.THIS .slds-size_6-of-12, .THIS .slds-size_12-of-12{
+    padding-left: 10px;
+    padding-top: 10px;
+}
+.THIS .marginTop {
+        margin-top: 25px;
+}
+.THIS .recForm {
+    width:100%
+}
+.THIS .nameField > lightning-input {
+    display: inherit !important;
+}
+.THIS .newButt {
+    margin: 20px;margin-bottom: -40px;
+}
+.THIS .relF {
+    position: relative !important;
+}

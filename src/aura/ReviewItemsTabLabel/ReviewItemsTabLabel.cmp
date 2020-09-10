@@ -1,0 +1,7 @@
+<aura:component>
+    <aura:registerEvent name="ReviewItemsTabClick" type="c:ReviewItemsTabClick"/>
+    <aura:attribute name="class" type="String"/>
+    <aura:attribute name="title" type="String"/>
+    <aura:handler event="c:ReviewItemsTabClick" action="{!c.handleTabClick}"/>
+    <li aura:id="tabli" class="{!v.class}" title="{!v.title}" role="presentation" onclick="{!c.activateTab}"><a class="slds-vertical-tabs__link" href="javascript:void(0)" role="tab">{!v.title}</a></li>
+</aura:component>

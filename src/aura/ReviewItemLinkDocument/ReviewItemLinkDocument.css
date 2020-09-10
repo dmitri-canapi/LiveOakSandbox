@@ -1,0 +1,18 @@
+.THIS .slds-modal__container  {
+    max-width: 70% !important;
+    width: 100% !important;
+}
+.THIS .cButton {
+    margin-top: -74px;
+    margin-right: 65px;
+}
+.THIS .toolbarDiv {
+    width: 100%;
+    position: relative;
+    background: whitesmoke;
+    height: 34px;
+    padding-left: 5px;
+    text-align: center;
+    line-height: 34px;
+    font-size: 16px;
+}

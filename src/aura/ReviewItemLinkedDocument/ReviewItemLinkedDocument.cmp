@@ -1,0 +1,29 @@
+<aura:component controller="Review_Items_Controller">
+    <aura:attribute name="recordId" type="String" />
+    <aura:attribute name="serchCondition" type="String" default="" />
+    <aura:attribute name="data" type="Object" />
+    <aura:attribute name="columns" type="List" />
+    <lightning:overlayLibrary aura:id="overlayLib" />
+    <aura:handler name="change" value="{!v.serchCondition}" action="{!c.doInit}" />
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+
+    <div style="float:left; width: 100%;">
+
+        <div style="">Linked Documents</div>
+        <div style="display:inline-block;  margin-right: 34px;float: left; margin-left: 9px;">
+            <div class="slds-m-top_medium">
+                <lightning:button label="Link document..." title="New Linked Document" onclick="{! c.AddDocument }" />
+            </div>
+        </div>
+        <div style="display:inline-block;float: right;margin-right: 34px">
+
+            <lightning:input aura:id="enter-search" name="enter-search" placeholder="Filter this list" type="search"
+                value="{!v.serchCondition}" />
+        </div>
+
+    </div>
+    <div style="height: auto; margin-top: 0px;clear:both" class="slds-m-vertical_medium">
+        <lightning:datatable keyField="id" data="{!v.data}" columns="{!v.columns}" onrowaction="{! c.remove }"
+            hideCheckboxColumn="true" />
+    </div>
+</aura:component>

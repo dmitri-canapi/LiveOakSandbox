@@ -1,0 +1,4 @@
+<aura:event type="APPLICATION" description="Event template">
+	<aura:attribute name="ShowNewShareHolder" type="Boolean" default="false"></aura:attribute>
+    <aura:attribute name="ShowNewRound" type="Boolean" default="false"></aura:attribute>
+</aura:event>

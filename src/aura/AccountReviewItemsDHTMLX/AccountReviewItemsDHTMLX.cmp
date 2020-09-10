@@ -1,0 +1,127 @@
+<aura:component controller="AccountReviewItemsDHTMLXController"
+    implements="flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes">
+    <aura:attribute name="recordId" type="Id" />
+    <aura:attribute name="ddId" type="String" />
+    <aura:attribute name="accId" type="String" />
+    <aura:attribute name="communityName" type="String" />
+    <aura:attribute name="componentHeight" type="String" default="400" />
+    <aura:attribute name="BaseUrl" type="String" />
+    <aura:attribute name="isCreateable" type="Boolean" default="false" />
+    <aura:attribute name="IsExternalGrader" type="Boolean" default="false" />
+    <aura:attribute type="Account[]" name="acctList" />
+    <aura:attribute name="selectAccsColumns" type="List" />
+    <aura:attribute name="selectedAccRow" type="List" />
+
+    <aura:attribute name="ShowDDchecklist" type="String" default="No" />
+    <aura:attribute name="DDLabel" type="String" default="Review Items" />
+    <aura:attribute name="inpFile" type="String" />
+    <aura:attribute name="modeOptions" type="List"
+        default="[{'label': 'Review Submissions', 'value': 'ReviewSubmissions'},{'label': 'Edit Review Items', 'value': 'EditReviewItems'}]" />
+    <aura:attribute name="mode" type="String" default="ReviewSubmissions" />
+
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+    <aura:handler event="force:showToast" action="{!c.sendRefreshDD}" />
+
+    <lightning:overlayLibrary aura:id="overlayLib" />
+
+    <aura:if isTrue="{!v.IsExternalGrader}">
+        <div class="slds-m-around_medium">
+            <div class="slds-text-heading_medium slds-m-left_medium slds-m-right_medium slds-float_left "
+                style="display: inline-flex;">
+                Select Account
+            </div>
+            <br />
+        </div>
+
+        <div class="slds-m-around_medium">
+            <div class="slds-clearfix">
+                <lightning:datatable data="{! v.acctList }" columns="{! v.selectAccsColumns }" keyField="id"
+                    aura:id="accTable" maxRowSelection="1" selectedRows="{! v.selectedAccRow}"
+                    onrowselection="{! c.updateRecId }" />
+            </div>
+        </div>
+    </aura:if>
+
+    <div class="slds-m-around_medium"
+        style="{! '' + v.ShowDDchecklist == 'Yes' ? 'position: relative;  margin-top: -25px; z-index: 1;top: 303px;' : 'position: relative;  margin-top: -35px; z-index: 1;top: 50px;' }">
+        <div class="slds-text-heading_medium slds-m-left_medium slds-m-right_medium slds-float_left"
+            style="display: inline-flex;margin-top: 10px;">
+            {!v.DDLabel}
+            <aura:if isTrue="{!v.mode == 'EditReviewItems'}">
+                <div>
+                    <a onclick="{!c.sendUpdateAllTemplates}"
+                        style="text-decoration: underline; margin-left: 10px; font-size: 14px;">Update Template</a>
+                </div>
+                <aura:set attribute="else">
+                    <aura:if isTrue="{!v.communityName == null}">
+                        <div>
+                            <a onclick="{!c.sendDownloadCSV}"
+                                style="text-decoration: underline; margin-left: 10px; font-size: 14px;">Download CSV</a>
+                            &nbsp;|<input type="file" aura:id="dealCsv" id="dealCsv"
+                                style="position:fixed;  top:-1000px;" onchange="{!c.handleFiles }" accept=".csv"
+                                value="{!v.inpFile}" /><label for="dealCsv"
+                                style="text-decoration: underline;margin-left: 10px;font-size: 14px;color: var(--lwc-brandTextLink,rgb(0, 109, 204));cursor:pointer">Upload
+                                CSV</label>
+                            <!--a onclick="{!c.sendUploadCSV}"
+                            style="text-decoration: underline; margin-left: 10px; font-size: 14px;">Upload CSV</a-->
+                        </div>
+                    </aura:if>
+                </aura:set>
+            </aura:if>
+        </div>
+
+
+        <div class="slds-float_right slds-m-right_large">
+            <ul class="slds-list_horizontal">
+                <aura:if isTrue="{!v.communityName == null}">
+                    <li style="margin-right: 5px;">
+                        <lightning:radioGroup name="viewStyleFilter" label="" options="{! v.modeOptions }"
+                            value="{! v.mode }" type="button" onchange="{!c.changeViewStyle}" />
+                    </li>
+                </aura:if>
+            </ul>
+        </div>
+        <div class="slds-clearfix riHeader" data-aura-rendered-by="1217:0" style="height: 21px;"></div>
+    </div>
+    <div class="slds-card">
+
+        <aura:if isTrue="{!v.ShowDDchecklist == 'Yes'}">
+            <div class="slds-m-around_medium">
+                <div class="slds-clearfix">
+                    <div class="slds-text-heading_medium slds-m-left_medium slds-m-right_medium slds-float_left"
+                        style="display: inline-flex;margin-top: 10px;">
+
+                        Due Diligence Checklists
+
+                    </div>
+
+
+                    <div class="slds-float_right slds-m-right_large">
+                        <ul class="slds-list_horizontal">
+                            <aura:if isTrue="{!v.isCreateable}">
+                                <li>
+                                    <lightning:button label="New" onclick="{!c.checkChanges}" class="NewButt" />
+                                </li>
+                            </aura:if>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </aura:if>
+
+
+        <div class="slds-m-left_small">
+            <aura:if isTrue="{!v.communityName != null}">
+                <iframe id="ariFrame" aura:id="ariFrame"
+                    style="{! 'border: none;min-height:' + v.componentHeight + 'px;width: 100%;'}"
+                    src="{! '/' +v.communityName + '/apex/AccountReviewItemsDHTMLXPage?accId=' + v.accId + '&amp;ddId=' + v.ddId + '&amp;communityName=' + v.communityName + '&amp;componentHeight=' + v.componentHeight + '&amp;showDD=' + v.ShowDDchecklist + '&amp;IsExternalGrader=' + v.IsExternalGrader}" />
+                <aura:set attribute="else">
+                    <iframe id="ariFrame" aura:id="ariFrame"
+                        style="{! 'border: none;min-height:' + v.componentHeight + 'px;width: 100%;'}"
+                        src="{!'/apex/AccountReviewItemsDHTMLXPage?accId=' + v.accId + '&amp;ddId=' + v.ddId + '&amp;communityName=' + v.communityName + '&amp;componentHeight=' + v.componentHeight + '&amp;showDD=' + v.ShowDDchecklist + '&amp;IsExternalGrader=' + v.IsExternalGrader}" />
+                </aura:set>
+            </aura:if>
+        </div>
+    </div>
+</aura:component>

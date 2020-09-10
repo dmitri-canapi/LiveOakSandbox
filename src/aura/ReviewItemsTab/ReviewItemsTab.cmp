@@ -1,0 +1,163 @@
+<aura:component controller="ReviewItemsListController">
+    <aura:registerEvent name="ReviewItemsDataChange" type="c:ReviewItemsDataChange"/>
+    <aura:attribute name="columns" type="List"/>
+    <aura:attribute name="class" type="String"/>
+    <aura:attribute name="title" type="String"/>
+    <aura:attribute name="description" type="String"/>
+    <aura:attribute name="showDetail" type="Boolean" default="false"/>
+    <aura:attribute name="isEditable" type="Boolean" default="false"/>
+    <aura:attribute name="isLoading" type="Boolean" default="false"/>
+    <aura:attribute name="ReviewItemMap" type="Map"/>
+    <aura:attribute name="catList" type="List"/>
+    <aura:attribute name="ReviewItemData" type="Object"/>
+    <aura:attribute name="ReviewItemRow" type="Object"/>
+    <aura:attribute name="ReviewItemFiles" type="Object"/>
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <aura:handler name="change" value="{!v.ReviewItemMap}" action="{!c.doInit}"/>
+    <aura:handler name="onSaveSuccess" event="force:recordSaveSuccess" action="{!c.saveRowDetailsSuccess}"/>
+    <aura:handler event="c:ReviewItemsTabClick" action="{!c.handleTabClick}"/>
+    
+    <div aura:id="tabdiv" class="{!v.class}" role="tabpanel">
+        <div class="slds-text-longform">
+            <h3 class="slds-text-heading_small">{!v.title}</h3>
+            
+            <div class="slds-m-bottom_x-small">
+                <aura:unescapedHtml value="{!v.description}"/>
+            </div>
+
+            <lightning:datatable 
+                data="{!v.ReviewItemData}"
+                columns="{!v.columns}"
+                keyField="id"
+                hideCheckboxColumn="true"
+                onrowaction="{!c.handleRowAction}"/>
+
+            <!-- 
+                the following div is a workaround to an issue - without this
+                hidden lightning:fileUpload element the file uploader in the 
+                modal dialog doesn't work. 
+            -->
+            <div style="display:none">
+                <lightning:fileUpload label="Attach files"
+                    name="fileUploader"
+                    multiple="true"
+                    recordId=""/>
+            </div>
+        </div>
+    </div>
+ 
+    <!-- edit review item modal -->
+    <aura:if isTrue="{!v.showDetail &amp;&amp; !v.isLoading}">
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_medium">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <lightning:buttonIcon iconName="utility:close"
+                                            onclick="{!c.hideRowDetails}"
+                                            alternativeText="close"
+                                            variant="bare-inverse"
+                                            class="slds-modal__close"/>
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">{!v.ReviewItemRow.Name}</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <aura:if isTrue="{!v.isEditable}">
+                        <!-- force:recordEdit aura:id="edit" recordId="{!v.ReviewItemRow.Id}"/-->
+                        <lightning:recordEditForm aura:id="edit" objectApiName="review_item__c" class="recForm">
+                            <lightning:messages />
+                            <lightning:layout multipleRows="true">
+                                <lightning:layoutItem size="6">
+                                    <lightning:inputField fieldName="Review_Item_Status__c" value="{!v.ReviewItemRow.Review_Item_Status__c}"/>
+                                </lightning:layoutItem>
+                                <lightning:layoutItem size="6">
+                                    <lightning:inputField fieldName="Review_Date__c" value="{!v.ReviewItemRow.Review_Date__c}" />
+                                </lightning:layoutItem>
+                             	<lightning:layoutItem size="6">
+                                    <lightning:inputField fieldName="Review_Item_Name__c" value="{!v.ReviewItemRow.Review_Item_Name__c}"/>
+                                </lightning:layoutItem>
+                                <lightning:layoutItem size="6" class="relF">
+                                    <lightning:input label="Item Category" fieldName="Item_Category__c" value="{!v.ReviewItemRow.Item_Category__c}" onfocus="{!c.showValues}"/>
+                                	<div name="optionsDiv" aura:id="optionsDiv" data-dropdown-element="true" role="listbox" class="slds-hide slds-listbox slds-listbox_vertical slds-dropdown slds-dropdown_fluid slds-dropdown_length-with-icon-10 slds-dropdown_left" data-position-id="lgcp-1000011" style="position: absolute; z-index: 7003; margin-top: 0px; margin-left: 10px;">
+										<aura:iteration items="{!v.catList}" var="cat">    
+                                            <div  role="option"  class="slds-media slds-listbox__option slds-media_center slds-media_small" aria-selected="false">
+                                                <span style = "width:100%"  class="slds-media__body">
+                                                    <div name="optionsDiv" style = "width:100%;padding:.5rem .75rem;" onclick="{!c.selectCategory}" data-num="{!cat.keyName}" title="{!cat.keyName}" class="slds-truncate">{!cat.keyName}</div>
+                                                </span>
+                                        	</div>
+                                        </aura:iteration> 
+                                        <div  role="option" style="cursor: pointer;" class="slds-float_right slds-text-link" aria-selected="false">
+                                            <span style = "width:100%" >
+                                                <div name="optionsDiv" style = "width:100%;padding-right: 10px;" onclick="{!c.selectCategory}" data-num="CloseCatList" title="Close" class="slds-truncate">Close</div>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    </lightning:layoutItem>
+                            	<lightning:layoutItem size="6">
+                                    <lightning:inputField fieldName="Assets_Needed__c" value="{!v.ReviewItemRow.Assets_Needed__c}"/>
+                                </lightning:layoutItem>
+                                <lightning:layoutItem size="6">
+                                    <lightning:inputField fieldName="Item_Description__c" value="{!v.ReviewItemRow.Item_Description__c}" />
+                                </lightning:layoutItem>
+                           		<lightning:layoutItem size="6">
+                                    <lightning:inputField fieldName="File_Count__c" value="{!v.ReviewItemRow.File_Count__c}"/>
+                                </lightning:layoutItem>
+                                <lightning:layoutItem size="6">
+                                    <lightning:inputField fieldName="Item_Comments__c" value="{!v.ReviewItemRow.Item_Comments__c}" />
+                                </lightning:layoutItem>
+                                <lightning:layoutItem size="6">
+                                    <lightning:inputField fieldName="Grade_Number__c" value="{!v.ReviewItemRow.Grade_Number__c}"/>
+                                </lightning:layoutItem>
+                                <lightning:layoutItem size="6">
+                                    <lightning:inputField fieldName="Urgent__c" value="{!v.ReviewItemRow.Urgent__c}" />
+                                </lightning:layoutItem>
+                                <lightning:layoutItem size="6">
+                                    <lightning:inputField fieldName="Item_Grading__c" value="{!v.ReviewItemRow.Item_Grading__c}"/>
+                                </lightning:layoutItem>
+                                <lightning:layoutItem size="6">
+                                    <lightning:inputField fieldName="Grade_Description__c" value="{!v.ReviewItemRow.Grade_Description__c}" />
+                                </lightning:layoutItem>
+                            </lightning:layout>
+                        </lightning:recordEditForm>
+                        <!-- -->
+                        <aura:set attribute="else">
+                            <force:recordView recordId="{!v.ReviewItemRow.Id}"/>
+                        </aura:set>
+                    </aura:if>
+
+                    <!--aura:if isTrue="{!v.isEditable}">
+                        <div class="slds-m-bottom_x-small">
+                            <lightning:fileUpload label="Attach Files" 
+                                name="fileUploader"
+                                multiple="true"
+                                recordId="{!v.ReviewItemRow.Id}"
+                                onuploadfinished="{!c.onUploadFinished}"/>
+                        </div>
+                    </aura:if-->
+          
+                    <div class="slds-grid slds-wrap">
+                        <aura:iteration items="{!v.ReviewItemFiles}" var="file">
+                            <div class="slds-col slds-size_1-of-3">
+                                <lightning:fileCard fileId="{!file.Id}"/>
+                            </div>
+                        </aura:iteration>
+                    </div>
+                    <c:ReviewItemLinkedDocument recordId="{!v.ReviewItemRow.Id}"></c:ReviewItemLinkedDocument>
+                </div>
+                
+                <footer class="slds-modal__footer">
+                    <lightning:button variant="neutral" 
+                                        label="Cancel"
+                                        title="Cancel"
+                                        onclick="{!c.hideRowDetails}"/>
+                    <lightning:button variant="brand" 
+                                        label="Save"
+                                        title="Save"
+                                        onclick="{!c.saveRowDetails}"/>
+                    <lightning:button variant="brand" 
+                                        label="Finish"
+                                        title="Finish"
+                                        onclick="{!c.submitRowDetails}"/>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </aura:if>
+</aura:component>

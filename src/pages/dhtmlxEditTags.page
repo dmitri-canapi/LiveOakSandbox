@@ -1,0 +1,241 @@
+<apex:page controller="CustomDocumentController" showHeader="false" sidebar="false">
+    <apex:includeScript value="{!URLFOR($Resource.DHTMLX, '/codebase/dhtmlx.js')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.DHTMLX, '/codebase/dhtmlx.css')}" />
+
+    <style type="text/css" media="screen">
+        html,
+        body {
+            margin: 0px;
+            padding: 0px;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        div.gridbox_material.gridbox table.obj tr td,
+        .dhx_grid_adjust,
+        .standartTreeRow {
+            font-size: 13px;
+        }
+    </style>
+
+    <body>
+        <!--a style="margin:10px;cursor:pointer; text-decoration: underline; color: #015ba7;display:block;" onclick="TagTree.contextID=null;showPopup(null);">Add new parent tag name...</a-->
+        <div id="treeboxbox_tree" style='margin:10px;width:500px; height:220px;'></div>
+    </body>
+    <script type="text/javascript">
+        var vars = {};
+        var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
+            vars[key] = value;
+        });
+        var accId = vars["accId"];
+
+        Menu = new dhtmlXMenuObject();
+        //Menu.setIconsPath("../common/images/menu/");
+        Menu.renderAsContextMenu();
+        Menu.attachEvent("onClick", onButtonClick);
+        Menu.loadStruct('{items:[{id: "Rename", text: "Rename"},{id: "Delete", text: "Delete..."},{id: "Add", text: "Add Child Tag..."},{id: "drag", text: "Drag And Drop To Move"}]}');
+        Menu.addNewSeparator("Delete", "sep");
+        Menu.setItemDisabled("drag");
+
+        TagTree = new dhtmlXTreeObject("treeboxbox_tree", "100%", "100%", 0);
+        TagTree.setImagePath("{!URLFOR($Resource.DHTMLX, '/skins/skyblue/imgs/dhxtree_skyblue/')}");
+        TagTree.enableDragAndDrop(true);
+        TagTree.enableContextMenu(Menu);
+        TagTree.enableItemEditor(true);
+
+        CustomDocumentController.getAccountTagsRecords(accId, '', function (result, event) {
+            //CustomDocumentController.getInactiveTagsRecords([], function(result, event) {
+            if (event.type == 'exception') {
+                alert(event.message);
+            } else {
+                data = result;
+
+                var finalData = [];
+                var t = [];
+                t.push('All');
+                t.push(0);
+                t.push('All');
+                finalData.push(t);
+
+                var parents = [];
+                for (var i = 0; i < data.length; i++) {
+                    var temp = [];
+                    temp.push(data[i].Id);
+                    if (data[i].ParentTag__c != null) {
+                        temp.push(data[i].ParentTag__c);
+                        parents.push(data[i].ParentTag__c);
+                    } else {
+                        temp.push('All');
+                    }
+                    temp.push(data[i].Name);
+                    finalData.push(temp);
+                }
+
+                TagTree.parse(finalData, "jsarray");
+                TagTree.openAllItems('All');
+                for (var i = 0; i < parents.length; i++) {
+                    TagTree.openAllItems(parents[i]);
+                }
+                TagTree.sortTree('0', 'ASC', true);
+            }
+        });
+
+        TagTree.attachEvent("onDrop", function (sId, tId, id, sObject, tObject) {
+            if (sId != 'All') {
+                if (tId == '0') {
+                    TagTree.moveItem(sId, 'item_child', 'All');
+                }
+                CustomDocumentController.setTagParent(sId, tId, function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    }
+                });
+                TagTree.sortTree('All', 'ASC', true);
+            }
+        });
+
+        TagTree.attachEvent("onEdit", function (state, id, tree, value) {
+            if (id == 'All') {
+                return false;
+            }
+            if (state == 2) {
+                console.log(id);
+                console.log(value);
+                if (value != null && value != '') {
+                    CustomDocumentController.renameTag(id, value, function (result, event) {
+                        if (event.type == 'exception') {
+                            alert(event.message);
+                        }
+                    });
+                } else {
+                    return false;
+                }
+            }
+            return true;
+        });
+
+
+        var myPop;
+        var myForm;
+
+        TagTree.attachEvent("onBeforeContextMenu", function (itemId) {
+            if (itemId == 'All') {
+                Menu.setItemDisabled('Rename');
+                Menu.setItemDisabled('Delete');
+            } else {
+                Menu.setItemEnabled('Rename');
+                Menu.setItemEnabled('Delete');
+            }
+            TagTree.selectItem(itemId, true, false);
+            return true;
+        });
+
+        function onButtonClick(menuitemId, type) {
+            var id = TagTree.contextID;
+            console.log(id);
+
+            console.log(menuitemId);
+            if (menuitemId == 'Delete') {
+                CustomDocumentController.removeTag(id, function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        TagTree.deleteItem(id, true);
+                    }
+                });
+
+            } else if (menuitemId == 'Add') {
+                if (id == 'All') {
+                    //TagTree.contextID=null;
+                    showPopup(null);
+                } else {
+                    showPopup(id);
+                }
+            } else if (menuitemId == 'AddParent') {
+                TagTree.contextID = null;
+                showPopup(null);
+            } else if (menuitemId == 'Rename') {
+                TagTree.editItem(id);
+            }
+        }
+
+        function showPopup(inp) {
+            console.log('=====');
+            console.log(TagTree.contextID);
+            console.log(inp);
+            if (!myPop) {
+                myPop = new dhtmlXPopup({ mode: "right" });
+                myForm = myPop.attachForm([
+                    {
+                        type: "block", style: "margin: 10px 20px 10px 0px;", list: [
+                            { type: "settings", position: "label-left", labelWidth: 130, inputWidth: 150 },
+                            { type: "input", name: "TagName", label: "New Tag name", value: "" }]
+                    },
+                    {
+                        type: "block", list: [
+                            { type: "button", name: "cancel", value: "Cancel", offsetTop: 10, offsetLeft: 65 },
+                            { type: "newcolumn" },
+                            { type: "button", name: "saveNewtag", value: "Save", offsetTop: 10, offsetLeft: 10 }
+                        ]
+                    }
+                ]);
+                myForm.attachEvent("onEnter", function () {
+                    addNewTag();
+                });
+                myForm.attachEvent("onButtonClick", function (name) {
+                    if (name == 'saveNewtag') {
+                        addNewTag();
+                    } else {
+                        myPop.hide();
+                    }
+                });
+            }
+            if (myPop.isVisible()) {
+                myPop.hide();
+            } else {
+                myForm.setItemValue("TagName", "");
+                myPop.show(0, 60, 0, 0);
+                myForm.setItemFocus("TagName");
+            }
+        }
+
+        function addNewTag() {
+            if (myForm.getItemValue("TagName") == "") {
+                dhtmlx.alert({
+                    type: "alert-error",
+                    text: "Please, enter tag name!",
+                    title: "Error",
+                    ok: "Ok",
+                    callback: function (result) {
+                        myPop.show(0, 60, 0, 0);
+                    }
+                });
+            } else {
+
+                CustomDocumentController.addNewTag(TagTree.contextID, myForm.getItemValue("TagName"), accId, '', function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        console.log('new rec id:');
+                        console.log(result);
+                        if (TagTree.contextID == null) {
+                            TagTree.contextID = 0;
+                        }
+                        TagTree.insertNewItem(TagTree.contextID, result, myForm.getItemValue("TagName"), 0, 0, 0, 0, "");
+                        //TagTree.deleteItem(id,true);
+                    }
+                });
+                myPop.hide();
+
+                return;
+            }
+        }
+
+
+    </script>
+    <style>
+        .dhx_popup_arrow_right {
+            display: none !important;
+        }
+    </style>
+</apex:page>

@@ -1,0 +1,5 @@
+<design:component>
+    <design:attribute name="communityName" label="Community Name" />
+    <design:attribute name="componentHeight" label="Component Height" />
+    <design:attribute name="ShowDDchecklist" label="Show DD Checklist table?" datasource="Yes,No" default="No" />
+</design:component>

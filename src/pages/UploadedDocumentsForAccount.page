@@ -1,0 +1,2758 @@
+<apex:page controller="CustomDocumentController" showHeader="false" sidebar="false" standardStylesheets="true" docType="html-5.0">
+
+    <apex:includeScript value="{!URLFOR($Resource.jquery)}" />
+    <apex:includeScript value="{!URLFOR($Resource.DHTMLX, '/codebase/dhtmlx.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.forcetk, '/Force.com-JavaScript-REST-Toolkit-master/forcetk.js')}" />
+
+
+    <apex:stylesheet value="{!URLFOR($Resource.DHTMLX, '/skins/material/dhtmlx.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.DHTMLX, '/skins/terrace/dhtmlx.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.DHTMLX, '/skins/web/dhtmlx.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.DHTMLX, '/skins/skyblue/dhtmlx.css')}" />
+
+    <apex:includeScript value="/soap/ajax/26.0/connection.js" />
+
+    <style type="text/css" media="screen">
+        html,
+        body {
+            margin: 0px;
+            padding: 0px;
+            height: 100%;
+            overflow: hidden !important;
+        }
+
+        .dhxwins_vp_auto {
+            overflow: hidden !important;
+        }
+
+        div#layoutObj {
+            position: relative;
+            /*margin-top: 15px;*/
+            margin-left: 0px;
+            width: 100%;
+            /*height: 364px;*/
+        }
+
+        .notification,
+        .notification:hover,
+        .UserOrGroupSelected {
+            line-height: 0.7em;
+            text-decoration: none;
+            padding: 5px;
+            position: relative;
+            display: inline-block;
+            border-radius: 2rem!important;
+            border: 1px solid rgb(221, 219, 218);
+            background: #6fb1da;
+            color: white;
+            font-size: 12px;
+        }
+
+        .badge {
+            top: 2px;
+            border-radius: 50%;
+            text-decoration: none;
+            color: white;
+            display: inline-block;
+            text-indent: 8px;
+        }
+
+        .UserOrGroupSelected {
+            background: #fff;
+            color: black;
+            margin-top: 5px;
+        }
+
+        .UserOrGroupSelected-Badge {
+            top: 2px;
+            border-radius: 50%;
+            text-decoration: none;
+            color: black;
+            display: inline-block;
+            text-indent: 8px;
+        }
+
+        .badge:hover {
+            color: red !important;
+            text-decoration: none;
+        }
+
+        .dhx_popup_arrow_right {
+            display: none !important;
+        }
+
+        .uneven {
+            background-color: #f3f3f3a1;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        div.gridbox_material.gridbox table.obj tr td {
+            border-bottom: 1px solid rgb(205, 202, 202);
+        }
+
+        .grid_hover {
+            background-color: #f9d3f136;
+        }
+
+        div.gridbox_material.gridbox table.obj tr td,
+        .dhx_grid_adjust,
+        .standartTreeRow {
+            font-size: 13px;
+        }
+
+        .dhx_cell_hdr_text input {
+            display: none;
+        }
+
+        .autocomplete-items div {
+            background-color: #fff;
+            border-bottom: 1px solid #d4d4d4;
+        }
+
+        .autocomplete-items div:last {
+            background-color: #fff;
+            border-bottom: none;
+        }
+
+        .autocomplete-items {
+            z-index: 1;
+            position: absolute;
+            max-width: 318px;
+            width: 100%;
+            margin-left: 11px;
+            outline: 1px solid #d4d4d4;
+            /*margin-left: calc(50% - 100px - 160px);*/
+        }
+
+        .header-disabled {
+            display: none;
+        }
+
+        .header-enabled {
+            display: block;
+            padding-top: 5px;
+            padding-left: 5px;
+        }
+
+        .searchValue {
+            width: 100%;
+            display: block;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        div.gridbox_dhx_terrace.gridbox table.obj tr td {
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+
+        div.gridbox_dhx_terrace.gridbox table.hdr td div.hdrcell {
+            padding-left: 5px;
+        }
+
+        .docVersion {
+            font-size: 10px;
+            border: 1px solid black;
+            padding: 0px 3px 0px 3px;
+            border-radius: 3px;
+        }
+
+        .searchDropdown .dhxform_control {
+            padding-left: 0px !important;
+        }
+
+        .dhxtree_dhx_terrace span.selectedTreeRow {
+            background-color: #d9eaff !important;
+        }
+
+        .dhtmlx-info a {
+            text-decoration: underline;
+        }
+
+        .btnDiv {
+            display: inline-block;
+            cursor: pointer;
+            padding: 6px;
+        }
+
+        .btnDiv:hover {
+            background-color: rgba(0, 0, 0, 0.07);
+        }
+
+        #toolbarDiv {
+            width: 100%;
+            position: relative;
+            background: whitesmoke;
+            height: 34px;
+            padding-left: 5px
+        }
+
+        .skyblueToolbar {
+            background-color: #e2efff !important;
+            background: linear-gradient(#e2efff, #d3e7ff) !important;
+            background: -webkit-linear-gradient(#e2efff, #d3e7ff) !important;
+            border: 1px solid #a4bed4;
+        }
+
+        .dhx_sub_row {
+            left: 47px !important;
+            width: auto !important;
+            height: auto !important;
+            margin-top: -2px !important;
+            color: #777777;
+        }
+
+        .objbox td {
+            height: auto !important;
+        }
+
+        .selectedTreeRow {
+            color: black;
+        }
+
+        .dhxtree_dhx_terrace span.selectedTreeRow_lor,
+        .dhxtree_dhx_terrace span.selectedTreeRow {
+            background-color: #d9eaff !important;
+        }
+
+        div.gridbox_dhx_terrace.gridbox table.obj tr.rowselected,
+        div.gridbox_dhx_terrace.gridbox table.obj tr.rowselected td,
+        div.gridbox_dhx_terrace.gridbox table.obj tr td.cellselected,
+        div.gridbox_dhx_terrace.gridbox table.obj.row20px tr.rowselected,
+        td.cellselected {
+            background: #d9eaff !important;
+        }
+
+        .dhxwins_vp_dhx_terrace div.dhxwin_active div.dhx_cell_wins div.dhx_cell_cont_wins {
+            border: 2px solid #fff;
+            border-top: none;
+        }
+
+        #innerBanner {
+            height: 25px;
+            z-index: 9999;
+            position: fixed;
+            background: #d9eaff;
+            margin-top: -4px;
+            font-size: 12px;
+            display: none;
+        }
+
+        .objbox {
+            margin-top: 20px;
+        }
+
+        .dhxwin_active .objbox {
+            margin-top: 0px;
+        }
+
+        .unverified a {
+            color: #C9AC34!important;
+        }
+
+        @media (max-width: 500px) {
+            #drZone,
+            #drZone input {
+                width: 140px !important;
+            }
+        }
+    </style>
+
+    <body>
+        <div id="innerBanner">
+            <img style="vertical-align: middle;width: 17px;margin: 4px;" border="0" src="{!URLFOR($Resource.DHTMLX, '/customIcons/info.png')}"
+            /> Drag and drop items here to upload
+            <div style="display:inline; float: right; margin: 5px;">
+                <a onclick="closeBanner();">X</a>
+            </div>
+        </div>
+
+        <div id="wrapper">
+            <div id="toolbarDiv">
+                <div class="btnDiv" onclick="setObjectsTree()">
+                    <img style="vertical-align: middle;width: 20px;" border="0" src="{!URLFOR($Resource.DHTMLX, '/customIcons/refresh.png')}"
+                    />
+                    <span style="height: 100%; vertical-align: middle;">Refresh</span>
+                </div>
+                <div class="btnDiv" id="uploadBtn" onclick="openUploadWindow();openUploadWindow()">
+                    <img style="vertical-align: middle;width: 20px;" border="0" src="{!URLFOR($Resource.DHTMLX, '/customIcons/plus.png')}" />
+                    <span style="height: 100%; vertical-align: middle;">Upload</span>
+                </div>
+                <div class="btnDiv" id="reApplyTagsBtn" onclick="reApplyTags()">
+                    <img style="vertical-align: middle;width: 20px;" border="0" src="{!URLFOR($Resource.DHTMLX, '/customIcons/bolt.png')}" />
+                    <span style="height: 100%; vertical-align: middle;">Auto Tag</span>
+                </div>
+                <div id="defaultSharingDiv" class="btnDiv" onclick="openDefaultSharing()">
+                    <img style="vertical-align: middle;width: 20px;" border="0" src="{!URLFOR($Resource.DHTMLX, '/customIcons/gear.png')}" />
+                    <span style="height: 100%; vertical-align: middle;">Default Sharing</span>
+                </div>
+                <div style="display: inline-block;/*width: calc(100% - 300px);*/ width: 340px;" id="drZone">
+                    <input type="search" id="mixSearch" autocomplete="off" style="/*margin-left: calc(50% - 100px - 270px);*/ margin: 5px 5px 0px 10px; height: 23px; text-indent: 5px;max-width: 320px;width:100%"
+                        placeHolder="Search Documents" onblur="hideSearchResults()" onsearch="clearResults(this)" onkeyup="search(this)"
+                    />
+                    <div id="autocomplete-list" class="autocomplete-items"></div>
+                    <input type="text" id="SearchDocuments" style="display:none;width: 200px;height: 28px; text-indent: 5px;float:right;margin-right: 70px;"
+                        placeHolder="Search by title" onkeyup="filterDocs(null)" />
+                </div>
+                <div id="mailUsersDiv" class="btnDiv" onclick="openMailUsers()">
+                    <img style="vertical-align: middle;width: 20px;" border="0" src="{!URLFOR($Resource.DHTMLX, '/customIcons/mail.png')}" />
+                    <span style="height: 100%; vertical-align: middle;margin-left:3px;">Email</span>
+                </div>
+            </div>
+            <div id="layoutObj"></div>
+            <div id="emailInfoBox" style="display:none;background: #d9eaff; height: 100%; padding: 5px;">
+                <div style="display: inline-block;">
+                    <img style="width: 20px;" border="0" src="{!URLFOR($Resource.DHTMLX, '/customIcons/info.png')}" />
+                </div>
+                <div style="display: inline-block; width:calc(100% - 35px);margin-left:3px;">
+                    <span style="height: 100%; line-height: 18px;">Alliance Users below have access to at least one file in this Account and will be notified about changes
+                        to files they are entitled access, updated within the Date Range below.</span>
+                </div>
+            </div>
+            <br/>
+            <br/>
+            <br/>
+        </div>
+
+
+        <script type="text/javascript">
+            var client = new forcetk.Client();
+            client.setSessionToken('{!$Api.Session_ID}');
+
+            console.log('{!$Profile.Name}');
+            console.log('{!$User.Id}');
+            document.body.addEventListener("dragover", function (e) {
+                e = e || event;
+                e.preventDefault();
+            }, true);
+
+            document.body.addEventListener("drop", function (e) {
+                e = e || event;
+                e.preventDefault();
+                drop(e);
+            }, true);
+
+            function drop(evt) {
+                /*dhtmlx.message({
+                    id:"UploadingBox",
+                    text:"Uploading Files...",
+                    expire: -1
+                });*/
+
+                if (!readOnlyMode) {
+
+                    var files = evt.dataTransfer.files;
+
+                    if (files.length > 0) {
+                        try {
+                            uploadFiles(files);
+                        } catch (error) {
+                            alert('An error occured in sfdc-dragndrop.js: ' + error);
+                        }
+                    }
+                }
+            }
+
+            function uploadFiles(files) {
+                var selectedTags = TagTree.getSelectedItemId();
+                var count = files.length;
+                var filesIds = [];
+                for (var index = 0, file; file = files[index]; index++) {
+                    var reader = new FileReader();
+
+                    reader.onloadend =
+                        (function (file) {
+                            return function (evt) {
+                                try {
+                                    myLayout.cells("b").progressOn();
+                                    CustomDocumentController.prepareDocumentForUpload(file.name, ObjectsTree.getSelectedItemId(), AccId, selectedTags, function (result, event) {
+                                        if (event.type == 'exception') {
+                                            dhtmlx.message({
+                                                type: "error",
+                                                text: event.message,
+                                                expire: 5000,
+                                            });
+                                            myLayout.cells("b").progressOff();
+                                        } else {
+
+                                            client.createBlob('ContentVersion', {
+                                                Origin: 'C',
+                                                PathOnClient: file.name,
+                                                FirstPublishLocationId: result
+                                            }, file.name, 'VersionData', file, function (response) {
+                                                filesIds.push(result);
+                                                if (!--count) {
+                                                    uploadComplete();
+                                                    shareWithUsers(filesIds);
+                                                    if (!isCommunity) {
+                                                        dhtmlx.message.hide("AllUploadMessage");
+                                                        dhtmlx.message({
+                                                            id: "AllUploadMessage",
+                                                            text: '<a onclick="selectAndOpenSharing(\'' + filesIds + '\')">Edit sharing for uploaded documents...</a>',
+                                                            expire: 15000,
+                                                        });
+                                                    }
+                                                }
+                                            }, function (request, status, response) { },
+                                                function (request, status, response) { },
+                                                (communityName ? communityName : null));
+                                        }
+                                    });
+                                } catch (e) {
+                                    dhtmlx.message({
+                                        type: "alert-error",
+                                        text: file.name + " can't be uploaded. " + e
+                                    });
+                                    //dhtmlx.message.hide("UploadingBox");
+                                }
+
+                            };
+                        })(file);
+
+                    reader.readAsDataURL(file);
+                }
+            }
+
+            function shareWithUsers(fileIds) {
+                console.log(fileIds);
+                CustomDocumentController.shareWithUsers(fileIds, function (result, event) {
+                });
+            }
+
+            function uploadComplete() {
+                filterDocs(null);
+                //dhtmlx.message.hide("UploadingBox");
+            }
+
+            function selectAndOpenSharing(docIds) {
+                if (docIds.includes(',')) {
+                    for (let a of docIds.split(',')) {
+                        myGrid.selectRowById(a, true);
+
+                    }
+                    showBulkRestrictAccessWindow(docIds);
+                } else {
+                    myGrid.selectRowById(docIds);
+                    showRestrictAccessWindow(docIds);
+                }
+            }
+
+            var yPos;
+            var xPos;
+            $("body").mousemove(function (e) {
+                yPos = e.pageY;
+                xPos = e.pageX;
+            })
+
+            var url = (window.location != window.parent.location) ? document.referrer : document.location.href;
+            parent.postMessage('setBaseUrl' + '-del-' + document.location.href, url);
+
+            window.addEventListener("message", function (event) {
+                if (event.data.includes('RefreshGrid')) {
+                    filterDocs(null);
+                }
+            }, false);
+
+            var vars = {};
+            var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
+                vars[key] = value;
+            });
+            var recordId = vars["recordId"];
+            var dhtmlxSkin = vars["skin"];
+            var communityName = vars["communityName"];
+            var isCommunity = JSON.parse(vars["isCommunity"]);
+            var componentHeight = vars["componentHeight"];
+            var readOnlyMode = JSON.parse(vars["readOnlyMode"]);
+            var highlightedDoc = vars["highlightedDoc"] ? vars["highlightedDoc"] : null;
+            var childRecordId;
+            var AccId;//accId
+            var AccRecordTypeName;
+            var AccName;
+            var myPop;
+            var myPop2;
+            var myForm;
+            var dhxWins2;
+
+            console.log(communityName);
+            if (isCommunity) {
+                $("#defaultSharingDiv").hide();
+                $("#mailUsersDiv").hide();
+            }
+            if (readOnlyMode) {
+                $("#defaultSharingDiv").hide();
+                $("#mailUsersDiv").hide();
+                $("#reApplyTagsBtn").hide();
+                $("#uploadBtn").hide();
+            }
+
+            var componentHeightInt = Number(componentHeight);
+            componentHeightInt = componentHeightInt - 36;
+            document.getElementById("layoutObj").style.height = componentHeightInt + "px";
+
+            var lSkin = "dhx_" + dhtmlxSkin;
+
+
+            if (dhtmlxSkin == 'material') {
+                lSkin = dhtmlxSkin;
+                var sheet = document.createElement('style')
+                sheet.innerHTML = ".dhxgrid_sort_desc, .dhxgrid_sort_asc {width:0px;} .selectedTreeRow {background-color: transparent;}";
+                document.body.appendChild(sheet);
+            }
+
+            $(document).ready(function () {
+                if (dhtmlxSkin == 'skyblue') {
+                    $('#toolbarDiv').addClass("skyblueToolbar");
+                }
+            });
+
+
+            var myLayout = new dhtmlXLayoutObject({
+                parent: "layoutObj",
+                pattern: '3W',
+                skin: lSkin
+            });
+
+            myLayout.cells("b").hideHeader();
+
+            myLayout.cells("a").setWidth(230);
+            myLayout.cells("c").setWidth(290);
+            myLayout.cells("a").setText("Objects");
+            myLayout.cells("c").setText("Tags");
+
+            myLayout.setAutoSize("b", "a;b;c");
+            myLayout.cells("c").collapse();
+            //myLayout.cells("c").fixSize(true, false);
+            myLayout.attachEvent("onCollapse", function (name) {
+                reAlignNotes();
+            });
+            myLayout.attachEvent("onExpand", function (name) {
+                reAlignNotes();
+                optimizeScreenView("onExpand");
+            });
+
+
+            Menu = new dhtmlXMenuObject();
+            Menu.renderAsContextMenu();
+            Menu.attachEvent("onClick", onButtonClick);
+            Menu.loadStruct('{items:[{id: "exp_collapse", text: "Collapse All"},{id: "Rename", text: "Rename"},{id: "Delete", text: "Delete..."},{id: "EditKeywords", text: "Edit Keywords..."},{id: "Add", text: "Add Child Tag..."},{id: "drag", text: "Drag And Drop To Move"}]}');
+            Menu.addNewSeparator("exp_collapse", "sep");
+            Menu.addNewSeparator("Delete", "sep2");
+            Menu.addNewSeparator("EditKeywords", "sep3");
+            Menu.setItemDisabled("drag");
+
+
+            ObjectsTree = myLayout.cells("a").attachTree();
+            ObjectsTree.setImagePath("{!URLFOR($Resource.DHTMLX)}" + '/skins/' + dhtmlxSkin + '/imgs/dhxtree_' + dhtmlxSkin + '/');
+
+            ObjectsTree.setOnClickHandler(filterDocs);
+            ObjectsTree.enableDragAndDrop(true);
+
+            function setObjectsTree() {
+                CustomDocumentController.GetAccountsRelatedLists(recordId, function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        console.log(result);
+                        childRecordId = result.acc.Id;
+                        AccName = result.acc.Name;
+                        AccRecordTypeName = result.acc.RecordType.Name;
+                        if (AccRecordTypeName == 'Limited Partner' || AccRecordTypeName == 'Bank' || AccRecordTypeName == 'LP (Individuals)') {
+                            myLayout.cells("c").expand();
+                        }
+                        var finalData = [];
+                        var t = [];
+                        t.push(result.acc.Id);
+                        t.push(0);
+                        t.push(AccName + ' (Account)');
+                        finalData.push(t);
+                        var parents = [];
+
+                        console.log(AccRecordTypeName);
+                        if (AccRecordTypeName != 'Limited Partner' && AccRecordTypeName != 'Bank' && AccRecordTypeName != 'LP (Individuals)') {
+                            if (result.acc.Opportunities) {
+                                t = [];
+                                t.push('Opportunities');
+                                t.push(result.acc.Id);
+                                t.push('Deals');
+                                finalData.push(t);
+                                parents.push(t);
+                                for (let c of result.acc.Opportunities) {
+                                    t = [];
+                                    t.push(c.Id);
+                                    t.push('Opportunities');
+                                    t.push(c.Name);
+                                    finalData.push(t);
+                                }
+                            }
+
+                            if (result.acc.Board_Meetings__r) {
+                                t = [];
+                                t.push('Board_Meetings__r');
+                                t.push(result.acc.Id);
+                                t.push('Board Meetings');
+                                finalData.push(t);
+                                parents.push(t);
+                                for (let c of result.acc.Board_Meetings__r) {
+                                    t = [];
+                                    t.push(c.Id);
+                                    t.push('Board_Meetings__r');
+                                    t.push(c.Name);
+                                    finalData.push(t);
+                                }
+                            }
+                        }
+
+                        if (result.folders && (AccRecordTypeName == 'Limited Partner' || AccRecordTypeName == 'Bank' || AccRecordTypeName == 'LP (Individuals)')) {
+                            var t = [];
+                            t.push('Documents');
+                            t.push(result.acc.Id);
+                            t.push('Documents');
+                            finalData.push(t);
+
+                            for (var i = 0; i < result.folders.length; i++) {
+                                var temp = [];
+                                temp.push(result.folders[i].Id);
+                                if (result.folders[i].Parent_Folder__c != null) {
+                                    temp.push(result.folders[i].Parent_Folder__c);
+                                } else {
+                                    temp.push('Documents');
+                                }
+                                temp.push(result.folders[i].Name);
+                                finalData.push(temp);
+                            }
+
+                        }
+
+                        /*if (result.Investment__r) { // round Relationship name
+                            t = [];
+                            t.push('Investment__r');
+                            t.push(result.Id);
+                            t.push('Rounds');
+                            finalData.push(t);
+                            parents.push(t);
+                            for (let c of result.Investment__r) {
+                                t = [];
+                                t.push(c.Id);
+                                t.push('Investment__r');
+                                t.push(c.Name);
+                                finalData.push(t);
+                            }
+                        }
+
+                        if (result.Investments__r) { // investment Relationship name
+                            t = [];
+                            t.push('Investments__r');
+                            t.push(result.Id);
+                            t.push('Investments');
+                            finalData.push(t);
+                            parents.push(t);
+                            for (let c of result.Investments__r) {
+                                t = [];
+                                t.push(c.Id);
+                                t.push('Investments__r');
+                                t.push(c.Name);
+                                finalData.push(t);
+                            }
+                        }*/
+
+                        /*if (!isCommunity && result.Contacts) {
+                            t = [];
+                            t.push('Contacts');
+                            t.push(result.Id);
+                            t.push('Contacts');
+                            finalData.push(t);
+                            parents.push('Contacts');
+                            for (let c of result.Contacts) {
+                                t = [];
+                                t.push(c.Id);
+                                t.push('Contacts');
+                                t.push(c.Name);
+                                finalData.push(t);
+                            }
+                        }*/
+
+
+                        try { ObjectsTree.deleteChildItems(0) } catch (e) { };
+                        ObjectsTree.parse(finalData, "jsarray");
+                        ObjectsTree.openAllItems(result.acc.Id);
+
+                        for (var i = 0; i < parents.length; i++) {
+                            ObjectsTree.openAllItems(parents[i]);
+                        }
+
+                        if (ObjectsTree.getIndexById(recordId) != null) {
+                            ObjectsTree.selectItem(recordId, true, false);
+                        } else {
+                            ObjectsTree.selectItem(result.acc.Id, true, false);
+                        }
+
+                        if (TagTree.hasChildren(0) == 0)
+                            getTags();
+                    }
+                });
+            }
+            setObjectsTree();
+
+            ObjectsTree.attachEvent("onBeforeDrag", function (sId) {
+                return false;
+            });
+
+            ObjectsTree.attachEvent("onDrag", function (sId, tId, id, sObject, tObject) {
+                if (sObject.fldSort && (!readOnlyMode)) {
+                    if (tId == 'Board_Meetings__r' || tId == 'Contacts' || tId == 'Opportunities' || tId == 'Investment__r' || tId == 'Investments__r' || tId == 'Documents') {
+                        dhtmlx.message({
+                            type: "error",
+                            text: "Please, move the document(s) to the correct parent object."
+                        });
+                    } else {
+                        if (myGrid.cells(sId, 11).getValue() == 'true') {
+                            CustomDocumentController.changeDocumentsParent(sId, tId, function (result, event) {
+                                if (event.type == 'exception') {
+                                    alert(event.message);
+                                } else {
+                                    dhtmlx.message({
+                                        text: "Document " + myGrid.cells(sId, 1).getValue().split("^")[0] + " moved to " + ObjectsTree.getItemText(tId)
+                                    });
+
+
+                                    filterDocs(null);
+                                }
+                            });
+                        } else {
+                            dhtmlx.message({
+                                type: "error",
+                                text: "You can't change this document."
+                            });
+                        }
+                    }
+                }
+                return false;
+            });
+
+
+
+            function ObjectsTreeMenuHandler(menuitemId, type) {
+                if (menuitemId == 'Refresh') {
+                    setObjectsTree();
+                } else if (menuitemId == 'exp_collapse') {
+                    var id = ObjectsTree.contextID;
+                    if (HirrMenu.getItemText(menuitemId) == 'Collapse All') {
+                        ObjectsTree.closeAllItems(id);
+                    } else {
+                        ObjectsTree.openAllItems(id);
+                    }
+                } else if (menuitemId == 'RestrictAccess') {
+                    showBulkRestrictAccessWindow(ObjectsTree.contextID);
+                } else if (menuitemId.includes('ShareWithGroup')) {
+                    addBulkAccess(menuitemId.replace('ShareWithGroup', ''), ObjectsTree.getSelectedItemId(), 'Read');
+                    /*CustomDocumentController.shareForFavGroups(menuitemId, data, function (result, event) {
+                        if (event.type == 'exception') {
+                            dhtmlx.alert({
+                                type: "alert-error",
+                                text: event.message,
+                                title: "Error",
+                                ok: "Ok",
+                                callback: function (result) {
+
+                                }
+                            });
+                        } else {
+                            dhtmlx.message({
+                                text: "File(s) shared with " + GridMenu.getItemText(menuitemId)
+                            });
+                            filterDocs(null);
+                        }
+                    });*/
+                }
+            }
+
+            // BULK RESTRICT ACCESS --->
+            function showBulkRestrictAccessWindow(ObjectsTreeId) {
+                var dhxWins = new dhtmlXWindows();
+                dhxWins.attachViewportTo("wrapper");
+                dhxWins.setSkin(lSkin);
+                docVersionsWindow = dhxWins.createWindow("w1", 10, 10, 950, 370);
+                if (ObjectsTreeId.includes(',')) {
+                    docVersionsWindow.setText("Restrict access to " + ObjectsTreeId.split(',').length + " documents");
+                } else {
+                    docVersionsWindow.setText("Restrict access to " + ObjectsTree.getItemText(ObjectsTreeId) + " documents");
+                }
+
+                dhxWins.window("w1").center();
+                dhxWins.window("w1").setModal(true);
+                dhxWins.window("w1").button("park").hide();
+
+                docVersionsWindow.attachEvent("onClose", function (win) {
+                    filterDocs(null);
+                    return true;
+                });
+
+                dhxWins.attachEvent("onResizeFinish", function (win) {
+                    var dim = win.getDimension();
+                    RestrictAccessWindowLayout.cells("a").setWidth(dim[0] / 2);
+                });
+
+                var RestrictAccessWindowLayout = docVersionsWindow.attachLayout("2U");
+                RestrictAccessWindowLayout.setSkin(lSkin);
+                RestrictAccessWindowLayout.cells('a').setText("Add Members");
+                RestrictAccessWindowLayout.cells('b').setText("Shared With");
+                RestrictAccessWindowLayout.cells("a").hideArrow();
+                RestrictAccessWindowLayout.cells("b").hideArrow();
+                RestrictAccessWindowLayout.setAutoSize("a", "a;b");
+
+                var usersList;
+                var groupsList;
+
+                var RestrictAccessWindowForm = RestrictAccessWindowLayout.cells("a").attachForm([
+                    {
+                        type: "block", style: "margin: 0px 0px 0px 0px;", list: [
+                            { type: "settings", position: "label-left" },
+                            { type: "select", offsetLeft: 5, labelWidth: 30, inputWidth: 70, name: "Type", id: "Type", label: "Type", value: "", options: [{ value: "Users", text: "Users" }, { value: "Groups", text: "Groups" }] },
+                            { type: "newcolumn", offsetLeft: 20 },
+                            /*{type: "input", labelWidth: 40, inputWidth: 150, name: "searchValue",id: "searchValue", label: "Search", value: "", offsetLeft:20},*/
+                            { type: "combo", label: "Search", inputWidth: 160, comboType: "image", name: "searchValue", filtering: true, offsetLeft: 10 },
+                            { type: "newcolumn", offsetLeft: 20 },
+                            { type: "select", offsetLeft: 5, labelWidth: 40, inputWidth: 60, name: "Access", id: "Access", label: "Access", value: "read", options: [{ value: "read", text: "Read" }, { value: "edit", text: "Edit" }] },
+                        ]
+                    },
+                    {
+                        type: "block", style: "margin: 0px 0px 0px 0px;", list: [
+                            { type: "container", name: "HTMLcontainer", id: "HTMLcontainer", inputWidth: "auto", inputHeight: RestrictAccessWindowLayout.cells("a").getHeight() - 100 }
+                        ]
+                    }
+                ]);
+
+                var dhxCombo = RestrictAccessWindowForm.getCombo("searchValue");
+
+                CustomDocumentController.getUsers('', function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        var data = ($('<div>').html(result.users).text());
+                        groupsList = ($('<div>').html(result.groups).text());
+                        usersList = data;
+                        dhxCombo.load(data);
+                    }
+                });
+
+                $("#AddPinsButtonDiv").remove();
+
+                var container = RestrictAccessWindowForm.getContainer("HTMLcontainer");
+                var pinsDiv = document.createElement('div');
+                pinsDiv.setAttribute("id", "pinsDiv");
+                var AddPinsButtonDiv = document.createElement('div');
+                AddPinsButtonDiv.setAttribute("id", "AddPinsButtonDiv");
+                container.appendChild(pinsDiv);
+                container.appendChild(AddPinsButtonDiv);
+
+                var RestrictAccessActionWindowFormData = [
+                    {
+                        type: "block", style: "margin: 0px 20px 10px 0px;", list: [
+                            { type: "settings", position: "label-left", labelWidth: 45, inputWidth: 200 },
+                            { type: "button", value: "Add", width: 134, disabled: true, name: "AddAccess" }
+                        ]
+                    }
+                ];
+                var RestrictAccessActionWindowForm = new dhtmlXForm("AddPinsButtonDiv", RestrictAccessActionWindowFormData);
+
+                RestrictAccessActionWindowForm.attachEvent("onButtonClick", function (name) {
+                    var members = pinsDiv.getElementsByTagName("SPAN");
+                    //console.log(members);
+
+
+                    if (ObjectsTreeId.includes(',')) {
+                        var docids = ObjectsTreeId.split(',');
+                        for (var j = 0; j <= docids.length; j++) {
+                            for (var i = 0; i < members.length; i++) {
+                                if (members[i].id) {
+                                    addAccessToFewDocs(members[i].id, docids[j], members[i].dataset.accesstype, ObjectsTreeId);
+                                }
+                            }
+                        }
+                    } else {
+                        for (var i = 0; i < members.length; i++) {
+                            if (members[i].id) {
+                                addBulkAccess(members[i].id, ObjectsTreeId, members[i].dataset.accesstype);
+                            }
+                        }
+                    }
+
+                    RestrictAccessActionWindowForm.disableItem("AddAccess");
+                    pinsDiv.innerHTML = "";
+                });
+
+                RestrictAccessWindowForm.attachEvent("onChange", function (name, value, state) {
+                    if (name == 'Type') {
+                        dhxCombo.unSelectOption();
+                        if (value == 'Groups') {
+                            dhxCombo.load(groupsList);
+                        } else {
+                            dhxCombo.load(usersList);
+                        }
+
+                    } else if (name == 'searchValue') {
+                        if (dhxCombo.getSelectedText() != null && dhxCombo.getSelectedText() != '') {
+                            var isAlreadySelected = document.getElementById(RestrictAccessWindowForm.getItemValue('searchValue'));
+                            if (!isAlreadySelected) {
+                                RestrictAccessActionWindowForm.enableItem("AddAccess");
+                                var UserOrGroup = document.createElement('span');
+                                UserOrGroup.setAttribute("id", RestrictAccessWindowForm.getItemValue('searchValue'));
+                                UserOrGroup.setAttribute("data-accesstype", RestrictAccessWindowForm.getItemValue('Access'));
+                                UserOrGroup.className = "UserOrGroupSelected";
+                                UserOrGroup.innerHTML = '<span>' + dhxCombo.getSelectedText() + ' (' + RestrictAccessWindowForm.getItemValue('Access').charAt(0).toUpperCase() + RestrictAccessWindowForm.getItemValue('Access').slice(1) + ')' + '</span>' + '<a class="UserOrGroupSelected-Badge" onclick="$(this).parent().remove();">X</a>';
+                                pinsDiv.appendChild(UserOrGroup);
+                            }
+                            dhxCombo.unSelectOption();
+                        }
+                    }
+                });
+
+                CurrentRestrictAccessGrid = RestrictAccessWindowLayout.cells("b").attachGrid();
+                CurrentRestrictAccessGrid.setHeader("FILE,TYPE,NAME,ACCESS,&nbsp;");
+                CurrentRestrictAccessGrid.setInitWidths("*,45,*,60,20");
+                CurrentRestrictAccessGrid.setColAlign("left,left,left,right,left");
+                CurrentRestrictAccessGrid.setColTypes("rotxt,rotxt,rotxt,rotxt,link");
+                CurrentRestrictAccessGrid.setColSorting("str,str,str,str,str");
+                CurrentRestrictAccessGrid.enableAlterCss("even", "uneven");
+                CurrentRestrictAccessGrid.enableRowsHover(true, 'grid_hover');
+                CurrentRestrictAccessGrid.setImagePath("{!URLFOR($Resource.DHTMLX)}" + '/skins/' + dhtmlxSkin + '/imgs/dhxgrid_' + dhtmlxSkin + '/');
+                CurrentRestrictAccessGrid.setIconsPath("{!URLFOR($Resource.DHTMLX, '/customIcons/')}");
+                CurrentRestrictAccessGrid.init();
+                getCurrentPermissionsForObject(ObjectsTreeId);
+            }
+
+            function getCurrentPermissionsForObject(ObjectsTreeId) {
+                CustomDocumentController.getCurrentPermissionsForObject(AccId, ObjectsTreeId, function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        var data = result;
+                        data = ($('<div>').html(data).text());
+                        console.log(data);
+                        try {
+                            CurrentRestrictAccessGrid.clearAll();
+                            CurrentRestrictAccessGrid.parse(data, "json");
+                        } catch (e) {
+                            filterDocs(null);
+                        }
+                    }
+                });
+            }
+
+            function removeDefaultSharing(dsId) {
+                CustomDocumentController.removeDefaultSharing(dsId, function (result, event) {
+                    if (event.type == 'exception') {
+
+                        dhtmlx.message({
+                            type: "error",
+                            text: event.message
+                        });
+
+                    } else {
+                        CurrentRestrictAccessGrid.deleteRow(dsId);
+                    }
+                });
+            }
+
+            function removeBulkAccess(dsId) {
+                CustomDocumentController.removeBulkAccess(dsId, function (result, event) {
+                    if (event.type == 'exception') {
+                        var errText = '';
+                        if (event.message.includes('cannot delete owner, rule or ar implicit share rows')) {
+                            errText = 'You can\'t delete File Owner.'
+                        } else {
+                            errText = event.message;
+                        }
+                        dhtmlx.message({
+                            type: "error",
+                            text: errText
+                        });
+
+                    } else {
+                        CurrentRestrictAccessGrid.deleteRow(dsId);
+                    }
+                });
+            }
+
+            function addBulkAccess(userOrGroupId, objId, accessType) {
+                CustomDocumentController.addBulkPermission(userOrGroupId, AccId, objId, accessType, function (result, event) {
+                    if (event.type == 'exception') {
+                        dhtmlx.message({
+                            type: "error",
+                            text: "You can't change access for this user."
+                        });
+                    } else {
+                        getCurrentPermissionsForObject(objId);
+                    }
+                });
+            }
+
+            // <--- BULK RESTRICT ACCESS
+
+            TagTree = myLayout.cells("c").attachTree();
+            TagTree.setImagePath("{!URLFOR($Resource.DHTMLX)}" + '/skins/' + dhtmlxSkin + '/imgs/dhxtree_' + dhtmlxSkin + '/');
+            TagTree.enableDragAndDrop(true);
+            //TagTree.enableCheckBoxes(1);
+            TagTree.enableMultiselection(true, false);
+            if (!isCommunity) {
+                TagTree.enableContextMenu(Menu);
+            }
+            TagTree.enableItemEditor(true);
+            TagTree.setOnClickHandler(filterDocs);
+
+            console.log(AccId);
+
+            function getTags() {
+                CustomDocumentController.getAccountTagsRecords(AccId, AccRecordTypeName, function (result, event) {
+                    //CustomDocumentController.getInactiveTagsRecords([], function(result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        data = result;
+
+                        var finalData = [];
+                        var t = [];
+                        t.push('All');
+                        t.push(0);
+                        t.push('All');
+                        finalData.push(t);
+
+                        var parents = [];
+                        for (var i = 0; i < data.length; i++) {
+                            var temp = [];
+                            temp.push(data[i].Id);
+                            if (data[i].ParentTag__c != null) {
+                                temp.push(data[i].ParentTag__c);
+                                parents.push(data[i].ParentTag__c);
+                            } else {
+                                temp.push('All');
+                            }
+                            temp.push(data[i].Name);
+                            finalData.push(temp);
+                        }
+
+                        TagTree.parse(finalData, "jsarray");
+                        TagTree.openAllItems('All');
+                        for (var i = 0; i < parents.length; i++) {
+                            TagTree.openAllItems(parents[i]);
+                        }
+                        TagTree.sortTree('0', 'ASC', true);
+                    }
+                });
+            }
+            if (isCommunity) {
+                TagTree.attachEvent("onDrag", function (sId, tId, id, sObject, tObject) { return false; });
+            }
+
+            ObjectsTree.attachEvent("onBeforeContextMenu", function (itemId) {
+                ObjectsTree.selectItem(itemId, true);
+                if (ObjectsTree.hasChildren(itemId) > 0) {
+                    HirrMenu.setItemEnabled("exp_collapse");
+                    var rootsAr = ObjectsTree.getSubItems(itemId).split(",");
+                    var isCollapsed = false;
+                    if (ObjectsTree.getOpenState(itemId) == -1) {
+                        isCollapsed = true;
+                    }
+                    for (var i = 0; i < rootsAr.length; i++) {
+                        if (ObjectsTree.getOpenState(rootsAr[i]) == -1 && ObjectsTree.hasChildren(rootsAr[i]) > 0) {
+                            isCollapsed = true;
+                            break;
+                        }
+                    }
+                    if (isCollapsed) {
+                        HirrMenu.setItemText('exp_collapse', 'Expand All');
+                    } else {
+                        HirrMenu.setItemText('exp_collapse', 'Collapse All');
+                    }
+
+                } else {
+                    HirrMenu.setItemDisabled("exp_collapse");
+                }
+
+                return true;
+            });
+
+            TagTree.attachEvent("onBeforeContextMenu", function (itemId) {
+                if (itemId == 'All') {
+                    Menu.setItemDisabled('Rename');
+                    Menu.setItemDisabled('Delete');
+                    Menu.setItemDisabled('EditKeywords');
+                } else {
+                    Menu.setItemEnabled('Rename');
+                    Menu.setItemEnabled('Delete');
+                    Menu.setItemEnabled('EditKeywords');
+                }
+
+                if (TagTree.hasChildren(itemId) > 0) {
+                    Menu.setItemEnabled("exp_collapse");
+                    var rootsAr = TagTree.getSubItems(itemId).split(",");
+                    var isCollapsed = false;
+                    if (TagTree.getOpenState(itemId) == -1) {
+                        isCollapsed = true;
+                    }
+                    for (var i = 0; i < rootsAr.length; i++) {
+                        if (TagTree.getOpenState(rootsAr[i]) == -1 && TagTree.hasChildren(rootsAr[i]) > 0) {
+                            isCollapsed = true;
+                            break;
+                        }
+                    }
+                    if (isCollapsed) {
+                        Menu.setItemText('exp_collapse', 'Expand All');
+                    } else {
+                        Menu.setItemText('exp_collapse', 'Collapse All');
+                    }
+
+                } else {
+                    Menu.setItemDisabled("exp_collapse");
+                }
+
+
+                TagTree.selectItem(itemId, true, false);
+                return true;
+            });
+
+            TagTree.attachEvent("onDrag", function (sId, tId, id, sObject, tObject) {
+                if (sObject.parentObject != tObject.parentObject) return false;
+
+                return true;
+            });
+
+            TagTree.attachEvent("onDrop", function (sId, tId, id, sObject, tObject) {
+                console.log(sObject);
+                console.log(tObject);
+                if (sId != 'All') {
+                    if (tId == '0') {
+                        TagTree.moveItem(sId, 'item_child', 'All');
+                    }
+                    CustomDocumentController.setTagParent(sId, tId, function (result, event) {
+                        if (event.type == 'exception') {
+                            alert(event.message);
+                        }
+                    });
+                    TagTree.sortTree('All', 'ASC', true);
+                }
+            });
+
+            TagTree.attachEvent("onEdit", function (state, id, tree, value) {
+                if (id == 'All') {
+                    return false;
+                }
+                if (state == 2) {
+                    console.log(id);
+                    console.log(value);
+                    if (value != null && value != '') {
+                        CustomDocumentController.renameTag(id, value, function (result, event) {
+                            if (event.type == 'exception') {
+                                alert(event.message);
+                            }
+                        });
+                    } else {
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+
+            function removeTagAssociation(tagAssocId) {
+
+                CustomDocumentController.removeDocHelperTagAssoc(tagAssocId, function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        $("#" + tagAssocId).remove();
+                    }
+                });
+            }
+
+            function clearSearchResults() {
+                try {
+                    var res = document.getElementById("autocomplete-list");
+                    while (res.firstChild) {
+                        res.removeChild(res.firstChild);
+                    }
+                } catch (e) { }
+            }
+
+            function searchDocs() {
+                document.getElementById('SearchDocuments').value = document.getElementById('mixSearch').value;
+                filterDocs(null);
+            }
+
+            function hideSearchResults() {
+                try {
+                    setTimeout(function () {
+                        var res = document.getElementById("autocomplete-list");
+                        while (res.firstChild) {
+                            res.removeChild(res.firstChild);
+                        }
+                    }, 200);
+                } catch (e) { }
+            }
+
+            function clearResults(o) {
+                console.log(o.value);
+                console.log('<--');
+                if (o.value == '') {
+                    searchDocs();
+                }
+            }
+            function search(o) {
+                clearSearchResults();
+                console.log(o.value.length);
+                var isTagsFound = false;
+                var isObjectsFound = false;
+
+                var a = document.getElementById('autocomplete-list');
+                if (a == null) {
+                    a = document.createElement("DIV");
+                    a.setAttribute("id", "autocomplete-list");
+                    a.setAttribute("class", "autocomplete-items");
+                    o.parentNode.appendChild(a);
+                }
+                var objHeader = document.createElement("DIV");
+                objHeader.classList.add("header-disabled");
+                objHeader.classList.remove("header-enabled");
+                objHeader.innerHTML = "<strong>Objects</strong>";
+                a.appendChild(objHeader);
+
+                var docsHeader = document.createElement("DIV");
+                docsHeader.classList.add("header-disabled");
+                docsHeader.classList.remove("header-enabled");
+                docsHeader.innerHTML = "<strong>Documents</strong>";
+                a.appendChild(docsHeader);
+
+                var tagsHeader = document.createElement("DIV");
+                tagsHeader.classList.add("header-disabled");
+                tagsHeader.classList.remove("header-enabled");
+                tagsHeader.innerHTML = "<strong>Tags</strong>";
+                a.appendChild(tagsHeader);
+
+                if (o.value.length > 1) {
+
+                    //
+                    TagTreeId = TagTree.getSelectedItemId();
+
+                    ObjectsTreeId = ObjectsTree.getSelectedItemId();
+
+                    if (ObjectsTreeId == null || ObjectsTreeId == '') {
+                        ObjectsTreeId = recordId;
+                    }
+
+                    if (childRecordId) {
+                        AccId = childRecordId;
+                    } else {
+                        AccId = recordId;
+                    }
+                    //
+                    if (TagTreeId.includes(',')) {
+                        TagTreeId = null;
+                    }
+                    CustomDocumentController.GetAccountDocumentsFilteredCount(TagTreeId, o.value, AccId, AccRecordTypeName, ObjectsTreeId, function (result, event) {
+                        if (event.type == 'exception') {
+                            alert(event.message);
+                        } else {
+                            console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@', result);
+                            if (result > 0) {
+                                console.log();
+                                docsHeader.classList.remove("header-disabled");
+                                docsHeader.classList.add("header-enabled");
+                                var d = document.createElement("DIV");
+                                d.innerHTML = "<span class='searchValue' onclick='searchDocs()'>" + result + " matching documents found.</span>";
+                                docsHeader.appendChild(d);
+                            } else if (result == 0 && !isTagsFound && !isObjectsFound) {
+                                clearSearchResults();
+                                var nothingFound = document.createElement("DIV");
+                                nothingFound.innerHTML = "<strong>No search results for '" + o.value + "'</strong>";
+                                a.appendChild(nothingFound);
+                            }
+                        }
+                    });
+                    console.log('!!!!!!!!!!!!!!', ObjectsTree);
+                    for (let i of ObjectsTree.getAllSubItems(0).split((','))) {
+                        //console.log(i);
+                        if (i.toUpperCase().includes(o.value.toUpperCase()) || ObjectsTree.getItemText(i).toUpperCase().includes(o.value.toUpperCase())) {
+                            isObjectsFound = true;
+                            objHeader.classList.remove("header-disabled");
+                            objHeader.classList.add("header-enabled");
+                            var b = document.createElement("DIV");
+                            b.innerHTML = "<span class='searchValue' onclick='document.getElementById(\"SearchDocuments\").value=\"\";ObjectsTree.selectItem(\"" + i + "\",true,false);clearSearchResults();'>" + ObjectsTree.getItemText(i) + "<span/>";
+                            objHeader.appendChild(b);
+                        }
+                    }
+
+                    for (let i of TagTree.getAllSubItems(0).split((','))) {
+                        //console.log(i);
+                        if (i.toUpperCase().includes(o.value.toUpperCase()) || TagTree.getItemText(i).toUpperCase().includes(o.value.toUpperCase())) {
+                            isTagsFound = true;
+                            tagsHeader.classList.remove("header-disabled");
+                            tagsHeader.classList.add("header-enabled");
+                            var b = document.createElement("DIV");
+                            b.innerHTML = "<span class='searchValue' onclick='document.getElementById(\"SearchDocuments\").value=\"\";TagTree.selectItem(\"" + i + "\",true,false);clearSearchResults();'>" + TagTree.getItemText(i) + "<span/>";
+                            tagsHeader.appendChild(b);
+                        }
+                    }
+
+
+                } else {
+                    searchDocs();
+                    var f = document.createElement("DIV");
+                    f.innerHTML = "<strong>Please type more then one character...</strong>";
+                    a.appendChild(f);
+                }
+                //var searchText = ($("#SearchDocuments").val().length>1) ? $("#SearchDocuments").val() : null;
+            }
+
+            function filterDocs(id) {
+                var url = (window.location != window.parent.location) ? document.referrer : document.location.href;
+                parent.postMessage('setSelectedRow' + '-del-' + 'null', url);
+                myLayout.cells("b").progressOn();
+                TagTreeId = TagTree.getSelectedItemId();
+                if (TagTreeId && !TagTreeId.includes(',')) {
+                    console.log(TagTreeId);
+                    //TagTree.setItemColor(TagTreeId,'black','red');
+                    if (!TagTree.getItemText(TagTreeId).includes('<input')) {
+                        myLayout.cells("c").setText("Tags (" + TagTree.getItemText(TagTreeId) + ")");
+                    }
+                } else if (TagTreeId && TagTreeId.includes(',')) {
+                    //TagTree.setItemColor(TagTreeId.split(',')[0],'black','black');
+                    myLayout.cells("c").setText("Tags (All)");
+                }
+
+                ObjectsTreeId = ObjectsTree.getSelectedItemId();
+                if (ObjectsTreeId) {
+                    //ObjectsTree.setItemColor(ObjectsTreeId,'black','red');
+                    var pId = ObjectsTree.getParentId(ObjectsTreeId);
+                    console.log(ObjectsTreeId);
+                    console.log(pId);
+                    /*if (pId==recordId || ObjectsTreeId==recordId){
+                        myLayout.cells("a").setText(ObjectsTree.getItemText(ObjectsTreeId));
+                    } else {
+                        myLayout.cells("a").setText(ObjectsTree.getItemText(pId) +  " (" + ObjectsTree.getItemText(ObjectsTreeId) + ")");
+                    }*/
+                    if (pId == '0') {
+                        myLayout.cells("a").setText(ObjectsTree.getItemText(ObjectsTreeId));
+                    } else {
+                        myLayout.cells("a").setText(ObjectsTree.getItemText(pId) + " (" + ObjectsTree.getItemText(ObjectsTreeId) + ")");
+                    }
+
+                    if (ObjectsTree.getParentId(pId) == 'Documents') {
+                        pId = 'Documents';
+                    }
+
+                    var url = (window.location != window.parent.location) ? document.referrer : document.location.href;
+                    parent.postMessage('setFileParent' + '-del-' + ObjectsTreeId + '-del-' + pId + '-del-' + ObjectsTree.getItemText(ObjectsTreeId), url);
+
+
+                }
+                if (ObjectsTreeId == null || ObjectsTreeId == '') {
+                    ObjectsTreeId = recordId;
+                }
+                console.log('!!-' + childRecordId);
+                if (childRecordId) {
+                    AccId = childRecordId;
+                } else {
+                    AccId = recordId;
+                }
+
+                var searchText = ($("#SearchDocuments").val().length > 1) ? $("#SearchDocuments").val() : null;
+                TagTreeId = (TagTreeId.includes(',')) ? null : TagTreeId;
+                CustomDocumentController.GetAccountDocumentsFiltered(TagTreeId, searchText, AccId, AccRecordTypeName, ObjectsTreeId, function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        var data = result;
+                        data = ($('<div>').html(data).text());
+                        myGrid.clearAll();
+                        myGrid.parse(data, "json");
+
+                        if (!readOnlyMode) {
+                            if (!$(".xhdr #innerBanner").length) {
+                                $('#innerBanner').appendTo(".xhdr");
+                                $("#innerBanner").css("width", $(".objbox").width());
+                                $('#innerBanner').show();
+                                setTimeout(function () {
+                                    //console.log($(".objbox").height());
+                                    $(".objbox").css("height", ($(".objbox").height() - 20));
+                                    //$(".objbox").css("height", 20);
+                                }, 500);
+                            }
+                        } else {
+                            $(".objbox").css("margin-top", "0px");
+                        }
+
+                        if (highlightedDoc) {
+                            myGrid.selectRowById(highlightedDoc, false, true, true);
+                        }
+                        /*myGrid.setColumnHidden(6,false);*/
+
+                        setTimeout(function () {
+                            myGrid.forEachRow(function (rowId) {
+                                if (myGrid.cells(rowId, 6).getValue() != null) {
+                                    myGrid.cellById(rowId, 6).open();
+                                }
+                                if (myGrid.getUserData(rowId, "Unverified")) {
+                                    myGrid.setRowTextStyle(rowId, "color:#C9AC34;");
+                                    myGrid.cells(rowId, 1).cell.className = 'unverified';
+                                }
+                            });
+                            /*myGrid.setColumnHidden(6,true);*/
+                            myLayout.cells("b").progressOff();
+                        }, 500);
+                        optimizeScreenView("FirstLoad");
+
+                    }
+                });
+            }
+
+            function onButtonClick(menuitemId, type) {
+                var id = TagTree.contextID;
+                console.log(id);
+                if (menuitemId == 'Delete') {
+                    CustomDocumentController.removeTag(id, function (result, event) {
+                        if (event.type == 'exception') {
+                            alert(event.message);
+                        } else {
+                            TagTree.deleteItem(id, true);
+                        }
+                    });
+
+                } else if (menuitemId == 'Add') {
+                    if (id == 'All') {
+                        //TagTree.contextID=null;
+                        showPopup(null);
+                    } else {
+                        showPopup(id);
+                    }
+                } else if (menuitemId == 'AddParent') {
+                    TagTree.contextID = null;
+                    showPopup(null);
+                } else if (menuitemId == 'Rename') {
+                    TagTree.editItem(id);
+                } else if (menuitemId == 'EditKeywords') {
+                    showKeywordsPopup(id);
+                } else if (menuitemId == 'exp_collapse') {
+                    if (Menu.getItemText(menuitemId) == 'Collapse All') {
+                        TagTree.closeAllItems(id);
+                    } else {
+                        TagTree.openAllItems(id);
+                    }
+                }
+            }
+
+            function showPopup(inp) {
+                console.log('=====');
+                console.log(TagTree.contextID);
+                console.log(inp);
+                if (!myPop) {
+                    myPop = new dhtmlXPopup({ mode: "right" });
+                    myForm = myPop.attachForm([
+                        {
+                            type: "block", style: "margin: 10px 20px 10px 0px;", list: [
+                                { type: "settings", position: "label-left", labelWidth: 130, inputWidth: 150 },
+                                { type: "input", name: "TagName", label: "New Tag name", value: "" }]
+                        },
+                        {
+                            type: "block", list: [
+                                { type: "button", name: "cancel", value: "Cancel", offsetTop: 10, offsetLeft: 65 },
+                                { type: "newcolumn" },
+                                { type: "button", name: "saveNewtag", value: "Save", offsetTop: 10, offsetLeft: 10 }
+                            ]
+                        }
+                    ]);
+                    myForm.attachEvent("onEnter", function () {
+                        addNewTag();
+                    });
+                    myForm.attachEvent("onButtonClick", function (name) {
+                        if (name == 'saveNewtag') {
+                            addNewTag();
+                        } else {
+                            myPop.hide();
+                        }
+                    });
+                }
+                if (myPop.isVisible()) {
+                    myPop.hide();
+                } else {
+                    myPop.show(xPos, yPos, 0, 0);
+                    try {
+                        myForm.setItemValue("TagName", "");
+                        myForm.setItemFocus("TagName");
+                    } catch (e) { }
+
+
+                }
+            }
+
+            function showKeywordsPopup(inp) {
+                var isAutoApplyChecked = true;
+                var keywords = '';
+                console.log(TagTree.contextID);
+                console.log(inp);
+                CustomDocumentController.getKeywordByTag(TagTree.contextID, function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        console.log(result);
+
+                        if (result.Id != null) {
+                            isAutoApplyChecked = result.IsKeywordEnabled__c;
+                            keywords = ($('<div>').html(result.Keywords__c).text());
+                            console.log(keywords);
+                        } else {
+
+                        }
+                        if (!myPop2) {
+                            myPop2 = new dhtmlXPopup({ mode: "right" });
+
+
+                            KeywordForm = myPop2.attachForm([
+                                {
+                                    type: "block", style: "margin: 10px 20px 0px 0px;", list: [
+                                        { type: "settings", position: "label-right", labelWidth: 210, inputWidth: 30 },
+                                        { type: "checkbox", name: "autoCheckbox", label: "Apply automatically if name matches", checked: isAutoApplyChecked, tooltip: "Tag will be automatically applied if a portion of the file name matches the tag or one of it's keywords", info: "true" }
+                                    ]
+                                },
+                                {
+                                    type: "block", style: "margin: 0px 20px 0px 0px;", list: [
+                                        { type: "settings", position: "label-top", labelWidth: 230, inputWidth: 250 },
+                                        { type: "editor", name: "keywords", label: "Tags Keywords", inputWidth: 250, inputHeight: 140, value: keywords }
+                                    ]
+                                },
+
+                                {
+                                    type: "block", list: [
+                                        { type: "button", name: "cancel", value: "Cancel", offsetTop: 10, offsetLeft: 55 },
+                                        { type: "newcolumn" },
+                                        { type: "button", name: "saveKeywords", value: "Save", offsetTop: 10, offsetLeft: 10 }
+                                    ]
+                                }
+                            ]);
+                            kEditor = KeywordForm.getEditor("keywords");
+                            kEditor.cell._stbHide();
+                            kEditor.setSizes();
+
+                            KeywordForm.attachEvent("onEnter", function () {
+                                saveKeywords();
+                            });
+                            KeywordForm.attachEvent("onButtonClick", function (name) {
+                                if (name == 'saveKeywords') {
+                                    saveKeywords();
+                                } else {
+                                    myPop2.hide();
+                                }
+                            });
+                        } else {
+                            KeywordForm.setItemValue("autoCheckbox", isAutoApplyChecked);
+                            KeywordForm.setItemValue("keywords", keywords);
+                        }
+                    }
+                    if (myPop2.isVisible()) {
+                        myPop2.hide();
+                    } else {
+                        myPop2.show(xPos, yPos, 0, 0);
+                        KeywordForm.setItemFocus("keywords");
+                    }
+                });
+            }
+            function saveKeywords() {
+                console.log(KeywordForm.getItemValue("autoCheckbox"));
+                var isAutoEnabled = (KeywordForm.getItemValue("autoCheckbox") == 1 ? true : false);
+                CustomDocumentController.saveKeywords(TagTree.contextID, isAutoEnabled, KeywordForm.getItemValue("keywords"), function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        myPop2.hide();
+                    }
+                });
+
+
+                return;
+            }
+
+            function addNewTag() {
+                if (myForm.getItemValue("TagName") == "") {
+                    dhtmlx.alert({
+                        type: "alert-error",
+                        text: "Please, enter tag name!",
+                        title: "Error",
+                        ok: "Ok",
+                        callback: function (result) {
+                            myPop.show(xPos, yPos, 0, 0);
+                        }
+                    });
+                } else {
+
+                    CustomDocumentController.addNewTag(TagTree.contextID, myForm.getItemValue("TagName"), AccId, AccRecordTypeName, function (result, event) {
+                        if (event.type == 'exception') {
+                            alert(event.message);
+                        } else {
+                            console.log('new rec id:');
+                            console.log(result);
+                            if (TagTree.contextID == null) {
+                                TagTree.contextID = 0;
+                            }
+                            TagTree.insertNewItem(TagTree.contextID, result, myForm.getItemValue("TagName"), 0, 0, 0, 0, "");
+                            TagTree.sortTree('0', 'ASC', true);
+                            //TagTree.deleteItem(id,true);
+                        }
+                    });
+                    myPop.hide();
+
+                    return;
+                }
+            }
+
+            function eXcell_tags(cell) { //the eXcell name is defined here
+
+                if (cell) {                // the default pattern, just copy it
+                    this.cell = cell;
+                    this.grid = this.cell.parentNode.grid;
+                }
+                this.edit = function () { }  //read-only cell doesn't have edit method
+                // the cell is read-only, so it's always in the disabled state
+                this.isDisabled = function () { return true; }
+                this.setValue = function (val) {
+                    var CellObj = this;
+
+                    CustomDocumentController.getDocsTagsRecords(val, function (result, event) {
+                        if (event.type == 'exception') {
+                            alert(event.message);
+                        } else {
+                            var resultArray = result;
+                            var options2 = [];
+                            if (resultArray != null) {
+                                var res = resultArray;
+                                //console.log(res);
+                                for (var i = 0; i < res.length; i++) {
+                                    var tName = res[i].Tag__r.Name;
+                                    if (res[i].Tag__r.ParentTag__c != null) {
+                                        tName = res[i].Tag__r.ParentTag__r.Name + ':' + tName;
+
+                                        if (res[i].Tag__r.ParentTag__r.ParentTag__c != null) {
+                                            tName = res[i].Tag__r.ParentTag__r.ParentTag__r.Name + ':' + tName;
+                                        }
+                                    }
+
+                                    options2.push({ value: res[i].Id, label: tName });
+                                }
+                            }
+
+                            var tagsBadges = '';
+                            for (var i = 0; i < options2.length; i++) {
+                                tagsBadges += "<span style='display:none'>" + options2[i].label + "</span><span id='" + options2[i].value + "' class='notification' style=''><span>" + options2[i].label + "</span>";
+                                if (myGrid.cells(val, 11).getValue() == 'true') {
+                                    tagsBadges += "<a class='badge' onclick='removeTagAssociation(\"" + options2[i].value + "\")'>x</a>"
+                                }
+                                tagsBadges += " </span>";
+                            }
+                            reAlignNotes();
+                            CellObj.setCValue(tagsBadges, val);
+
+
+                        }
+                    });
+                }
+            }
+            eXcell_tags.prototype = new eXcell;// nests all other methods from the base class
+
+            function custom_1(a, b, ord, a_id, b_id) {
+                a = myGrid.cells(a_id, 8).getValue();
+                b = myGrid.cells(b_id, 8).getValue();
+                return ord == "asc" ? (a > b ? 1 : -1) : (a > b ? -1 : 1);
+            };
+
+
+            myGrid = myLayout.cells("b").attachGrid();
+
+            if ($("#layoutObj").width() < 1200) {
+
+                myGrid.setHeader("TYPE,DOCUMENT,portal-deprecated,DATE,OWNER,ACCESS,NOTES,RELEASE DATE-deprecated,TAGS,OWNER,ownerId,IsEditable,ACCESS");
+                myGrid.setInitWidths("46,350,0,8,0,80,0,100,300,60,0,0,100");
+            } else {
+
+                myGrid.setHeader("TYPE,DOCUMENT,portal-deprecated,CREATED DATE,OWNER,ACCESS,NOTES,RELEASE DATE-deprecated,TAGS,OWNER,ownerId,IsEditable,ACCESS");
+                myGrid.setInitWidths("46,*,0,100,53,80,0,100,*,0,0,0,0");
+            }
+            myGrid.setColumnMinWidth(350, 1);
+            myGrid.setColumnMinWidth(300, 8);
+
+            myGrid.setColAlign("center,left,left,left,left,left,left,left,left,left,left,left,left");
+            myGrid.setColTypes("img,link,rotxt,rotxt,rotxt,rotxt,sub_row,rotxt,tags,rotxt,rotxt,rotxt,rotxt");
+            myGrid.setColSorting("str,str,str,str,str,str,str,str,str,str,str,str,str");
+
+            myGrid.setCustomSorting(custom_1, 8);
+
+            myGrid.enableDragAndDrop(true);
+            myGrid.enableMultiline(true);
+            myGrid.enableAlterCss("even", "uneven");
+            myGrid.enableRowsHover(true, 'grid_hover');
+            myGrid.enableMultiselect(true);
+            myGrid.setColumnHidden(2, true);
+            myGrid.setColumnHidden(7, true);
+            myGrid.setColumnHidden(9, true);
+            myGrid.setColumnHidden(10, true);
+            myGrid.setColumnHidden(11, true);
+            myGrid.setColumnHidden(12, true);
+
+            myGrid.setImagePath("{!URLFOR($Resource.DHTMLX)}" + '/skins/' + dhtmlxSkin + '/imgs/dhxgrid_' + dhtmlxSkin + '/');
+            myGrid.setIconsPath("{!URLFOR($Resource.DHTMLX, '/customIcons/')}");
+
+            //start grid
+            myGrid.init();
+
+            if ($("#layoutObj").width() < 1200) {
+                //myGrid.splitAt(2);
+                myGrid.setColumnHidden(4, true);
+                myGrid.setColumnHidden(5, true);
+                myGrid.setColumnHidden(9, false);
+                myGrid.setColumnHidden(12, false);
+
+                if (AccRecordTypeName == 'Limited Partner' || AccRecordTypeName == 'Bank' || AccRecordTypeName == 'LP (Individuals)') {
+                    myLayout.cells("c").expand();
+                    myLayout.cells("c").collapse();
+                    myLayout.cells("c").expand();
+                } else {
+                    myLayout.cells("c").collapse();
+                    myLayout.cells("c").expand();
+                    myLayout.cells("c").collapse();
+                }
+            }
+
+            CustomDocumentController.getFavoriteGroups(function (result, event) {
+                if (event.type == 'exception') {
+                    alert(event.message);
+                } else {
+                    //console.log();
+                    var shareItemsString = ($('<div>').html(result).text());
+                    GridMenu = new dhtmlXMenuObject();
+                    GridMenu.renderAsContextMenu();
+                    GridMenu.attachEvent("onClick", GridMenuHandler);
+                    GridMenu.loadStruct('{items:[{id: "ShareMenuItem", text: "Share With...", items:' + shareItemsString + '}, { id: "Properties", text: "Properties..." }, { id: "Delete", text: "Delete Document(s)" }, { id: "Manage", text: "Manage Versions" }, { id: "SelectAll", text: "Select All" }]}');
+
+                    GridMenu.addNewSeparator('Manage', 'sep1');
+
+                    var shareItems = JSON.parse(shareItemsString);
+                    var lastshareItemId = '';
+                    for (let a of shareItems) {
+
+                        if (a.id != 'RestrictAccess') {
+                            lastshareItemId = a.id;
+                        }
+                    }
+                    if (lastshareItemId != '') {
+                        GridMenu.addNewSeparator(lastshareItemId, 'sep2');
+                    }
+                    myGrid.enableContextMenu(GridMenu);
+
+                    HirrMenu = new dhtmlXMenuObject();
+                    HirrMenu.renderAsContextMenu();
+                    HirrMenu.attachEvent("onClick", ObjectsTreeMenuHandler);
+                    HirrMenu.loadStruct('{items:[{id: "exp_collapse", text: "Collapse All"},{id: "Refresh", text: "Refresh"},{id: "ShareMenuItem", text: "Share With...", items:' + shareItemsString + '}]}');
+                    ObjectsTree.enableContextMenu(HirrMenu);
+
+                }
+            });
+
+            myGrid.attachEvent("onRowSelect", function (id, ind) {
+                parent.postMessage('setSelectedRow' + '-del-' + id, url);
+            });
+
+
+            myGrid.attachEvent("onBeforeContextMenu", function (id, ind) {
+
+                console.log(myGrid.getSelectedRowId());
+                if (myGrid.getSelectedRowId() != null && myGrid.getSelectedRowId().includes(id)) {
+                    myGrid.selectRowById(id, true);
+                } else {
+                    myGrid.selectRowById(id, false);
+                }
+
+                var data = myGrid.getSelectedRowId();
+                if (AccRecordTypeName != 'Limited Partner' && AccRecordTypeName != 'Bank' && AccRecordTypeName != 'LP (Individuals)') {
+                    GridMenu.hideItem('OwnAccount');
+                }
+                if (data.includes(',')) {
+                    GridMenu.hideItem('Manage');
+
+                    var isAllFilesOwner = false;
+                    var idsArr = data.split(',');
+                    for (var i = 0; i < idsArr.length; i++) {
+                        console.log('#####', myGrid.cells(idsArr[i], 10).getValue());
+                        if ('{!$User.Id}' == myGrid.cells(idsArr[i], 10).getValue()) {
+                            isAllFilesOwner = true;
+                        } else {
+                            isAllFilesOwner = false;
+                            break;
+                        }
+                    }
+
+                    if ('{!$Profile.Name}' == 'System Administrator' || '{!$Profile.Name}' == 'Canapi System Admin' || isAllFilesOwner) {
+                        GridMenu.showItem('Delete');
+                        GridMenu.showItem('ShareMenuItem');
+                    } else {
+                        GridMenu.hideItem('Delete');
+                        GridMenu.hideItem('ShareMenuItem');
+                        return false;
+                    }
+                    GridMenu.hideItem('Properties');
+
+                } else {
+                    if ('{!$Profile.Name}' == 'System Administrator' || '{!$Profile.Name}' == 'Canapi System Admin' || '{!$User.Id}' == myGrid.cells(data, 10).getValue()) {
+                        GridMenu.showItem('ShareMenuItem');
+                        GridMenu.showItem('Manage');
+                        GridMenu.showItem('Delete');
+                        GridMenu.showItem('Properties');
+                    } else {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            function GridMenuHandler(menuitemId, type) {
+                var data = myGrid.getSelectedRowId();
+                if (menuitemId == 'RestrictAccess') {
+                    if (data.includes(',')) {
+                        showBulkRestrictAccessWindow(data);
+                    } else {
+                        showRestrictAccessWindow(data);
+                    }
+                } else if (menuitemId == 'OwnAccount') {
+                    CustomDocumentController.setAccountShareOnly(data, true, AccId, 'Read', function (result, event) {
+                        if (event.type == 'exception') {
+                            console.log(event.type);
+                            dhtmlx.alert({
+                                type: "alert-error",
+                                text: event.message,
+                                title: "Error",
+                                ok: "Ok",
+                                callback: function (result) {
+
+                                }
+                            });
+                        } else {
+                            dhtmlx.message({
+                                text: 'File(s) shared with Finance Team - This account only'
+                            });
+                            filterDocs(null);
+                        }
+                    });
+                } else if (menuitemId == 'Manage') {
+                    if (data.includes(',')) {
+                        dhtmlx.message({
+                            type: "alert-error",
+                            text: 'Please, select only one document.'
+                        });
+                    } else {
+                        dhxWins = new dhtmlXWindows();
+                        dhxWins.attachViewportTo("layoutObj");
+                        dhxWins.setSkin(lSkin);
+                        docVersionsWindow = dhxWins.createWindow("w1", 20, 30, 700, 300);
+                        docVersionsWindow.setText("Manage Versions for " + myGrid.cells(data, 1).getValue().split("^")[0]);
+                        dhxWins.window("w1").center();
+                        dhxWins.window("w1").setModal(true);
+
+                        docVersionsWindow.attachEvent("onClose", function (win) {
+                            filterDocs(null);
+                            return true;
+                        });
+
+                        DocVersionsGridMenu = new dhtmlXMenuObject();
+                        DocVersionsGridMenu.renderAsContextMenu();
+                        DocVersionsGridMenu.attachEvent("onClick", function () {
+                            var DocVersionsIds = docVersionsGrid.getSelectedRowId();
+                            var delName;
+                            if (DocVersionsIds.includes(',')) {
+                                delName = DocVersionsIds.split(',').length + ' documents';
+                            } else {
+                                delName = docVersionsGrid.cells(DocVersionsIds, 0).getValue().split("^")[0];
+                            }
+                            dhtmlx.confirm("Delete " + delName + "?", function (result) {
+                                if (result) {
+                                    CustomDocumentController.deleteDocument(DocVersionsIds, function (result, event) {
+                                        if (event.type == 'exception') {
+                                            alert(event.message);
+                                        } else {
+                                            CustomDocumentController.GetDocVersionsData(AccId, myGrid.getSelectedRowId(), docVersionsGrid.cells(docVersionsGrid.getRowId(0), 0).getValue().split("^")[0], function (result2, event) {
+                                                if (event.type == 'exception') {
+                                                    alert(event.message);
+                                                } else {
+                                                    console.log(result2);
+                                                    var res = result2;
+                                                    res = ($('<div>').html(res).text());
+                                                    docVersionsGrid.clearAll();
+                                                    docVersionsGrid.parse(res, "json");
+                                                }
+                                            });
+                                        }
+                                    });
+                                    return true;
+                                }
+                            });
+                            return true;
+                        });
+                        DocVersionsGridMenu.loadStruct('{items:[{id: "Delete", text: "Delete Document(s)"}]}');
+
+                        docVersionsGrid = docVersionsWindow.attachGrid();
+                        docVersionsGrid.setHeader("DOCUMENT,VERSION,DATE,CREATED BY");
+                        docVersionsGrid.setInitWidths("*,63,65,130");
+                        docVersionsGrid.setColAlign("left,center,center,left");
+                        docVersionsGrid.setColTypes("link,rotxt,rotxt,rotxt");
+                        docVersionsGrid.setColSorting("str,str,str,str");
+                        docVersionsGrid.enableContextMenu(DocVersionsGridMenu);
+                        docVersionsGrid.enableMultiline(true);
+                        docVersionsGrid.enableAlterCss("even", "uneven");
+                        docVersionsGrid.enableRowsHover(true, 'grid_hover');
+                        docVersionsGrid.enableMultiselect(true);
+                        docVersionsGrid.setImagePath("{!URLFOR($Resource.DHTMLX)}" + '/skins/' + dhtmlxSkin + '/imgs/dhxgrid_' + dhtmlxSkin + '/');
+                        docVersionsGrid.setIconsPath("{!URLFOR($Resource.DHTMLX, '/customIcons/')}");
+                        docVersionsGrid.init();
+
+                        CustomDocumentController.GetDocVersionsData(AccId, data, null, function (result, event) {
+                            if (event.type == 'exception') {
+                                alert(event.message);
+                            } else {
+                                console.log(result);
+                                var res = result;
+                                res = ($('<div>').html(res).text());
+                                docVersionsGrid.parse(res, "json");
+                            }
+                        });
+
+                    }
+                } else if (menuitemId == 'SelectAll') {
+                    myGrid.selectAll();
+                } else if (menuitemId == 'Delete') {
+                    var delName;
+                    if (data.includes(',')) {
+                        delName = data.split(',').length + ' documents';
+                    } else {
+                        delName = myGrid.cells(data, 1).getValue().split("^")[0];
+                    }
+                    dhtmlx.confirm("Delete " + delName + "?", function (result) {
+                        if (result) {
+                            CustomDocumentController.deleteDocument(data, function (result, event) {
+                                if (event.type == 'exception') {
+                                    alert(event.message);
+                                } else {
+                                    myGrid.deleteSelectedRows();
+                                }
+                            });
+                            return true;
+                        }
+                    });
+                } else if (menuitemId == 'Properties') {
+                    showPropertiesWindow(data);
+                } else if (menuitemId.includes('ShareWithGroup')) {
+                    CustomDocumentController.shareForFavGroups(menuitemId, data, function (result, event) {
+                        if (event.type == 'exception') {
+                            dhtmlx.alert({
+                                type: "alert-error",
+                                text: event.message,
+                                title: "Error",
+                                ok: "Ok",
+                                callback: function (result) {
+
+                                }
+                            });
+                        } else {
+                            dhtmlx.message({
+                                text: "File(s) shared with " + GridMenu.getItemText(menuitemId)
+                            });
+                            filterDocs(null);
+                        }
+                    });
+                }
+                return true;
+            }
+
+            myGrid.attachEvent("onEditCell", function (stage, rId, cInd, nValue, oValue) {
+                if (cInd == 6) {
+                    if (myGrid.cells(rId, 11).getValue() == 'true') {
+                        if (stage == 2) {
+                            CustomDocumentController.setDocumentNotes(rId, nValue, function (result, event) {
+                                if (event.type == 'exception') {
+                                    alert(event.message);
+                                }
+                            });
+                        }
+                    } else {
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            myGrid.attachEvent("onMouseOver", function (id, ind) {
+                if (ind == 4)
+                    this.cells(id, ind).setAttribute("title", myGrid.cells(id, 9).getValue());
+                return true
+            });
+
+            /*myGrid.attachEvent("onBeforeDrag", function(id){ return false; });*/
+
+            myGrid.attachEvent("onDrag", function (sId, tId, sObj, tObj, sInd, tInd) {
+                if (sObj == TagTree && sId != 'All' && myGrid.cells(tId, 11).getValue() == 'true') {
+                    CustomDocumentController.addTagForDocument(tId, sId, function (result, event) {
+                        if (event.type == 'exception') {
+                            alert(event.message);
+                        } else {
+
+                            tObj.cells(tId, 8).setValue(tId);//updating tags on ui
+                        }
+                    });
+                } else if (myGrid.cells(tId, 11).getValue() == 'false') {
+                    dhtmlx.message({
+                        type: "error",
+                        text: "You can't change this document."
+                    });
+                }
+
+                return false;
+
+            });
+
+            function addAccess(userOrGroupId, currentDocId, accessType) {
+                console.log('user--' + userOrGroupId);
+                CustomDocumentController.addPermission(userOrGroupId, currentDocId, accessType, function (result, event) {
+                    if (event.type == 'exception') {
+                        /*dhtmlx.message({
+                            type:"error",
+                            text: "You can't change access for such user."
+                        });*/
+                    } else {
+                        getCurrentPermissionsForTheDocument(currentDocId);
+                    }
+                });
+            }
+
+            function addAccessToFewDocs(userOrGroupId, currentDocId, accessType, ObjectsTreeId) {
+                console.log('user--' + userOrGroupId);
+                CustomDocumentController.addPermission(userOrGroupId, currentDocId, accessType, function (result, event) {
+                    if (event.type == 'exception') {
+                        /*dhtmlx.message({
+                            type:"error",
+                            text: "You can't change access for such user."
+                        });*/
+                    } else {
+                        getCurrentPermissionsForObject(ObjectsTreeId);
+                    }
+                });
+            }
+
+
+            var CurrentRestrictAccessGrid;
+            function getCurrentPermissionsForTheDocument(currentDocId) {
+                CustomDocumentController.getCurrentPermissionsForTheDocument(currentDocId, function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        console.log(result);
+                        var data = result;
+                        data = ($('<div>').html(data).text());
+                        console.log(data);
+                        CurrentRestrictAccessGrid.clearAll();
+                        CurrentRestrictAccessGrid.parse(data, "json");
+                        //myLayout.cells("b").progressOff();
+                    }
+                });
+            }
+
+            function removeAccess(userOrGroupId, currentDocId) {
+                CustomDocumentController.removeAccess(userOrGroupId, currentDocId, function (result, event) {
+                    if (event.type == 'exception') {
+                        var errText = '';
+                        if (event.message.includes('cannot delete owner, rule or ar implicit share rows')) {
+                            errText = 'You can\'t delete File Owner.'
+                        } else {
+                            errText = event.message;
+                        }
+                        dhtmlx.message({
+                            type: "error",
+                            text: errText
+                        });
+
+                    } else {
+                        CurrentRestrictAccessGrid.deleteRow(userOrGroupId);
+                    }
+                });
+            }
+
+            function removeDSAccess(dsID) {
+                CustomDocumentController.removeDefaultSharing(dsID, function (result, event) {
+                    if (event.type == 'exception') {
+                        var errText = '';
+                        if (event.message.includes('cannot delete owner, rule or ar implicit share rows')) {
+                            errText = 'You can\'t delete File Owner.'
+                        } else {
+                            errText = event.message;
+                        }
+                        dhtmlx.message({
+                            type: "error",
+                            text: errText
+                        });
+
+                    } else {
+                        CurrentRestrictAccessGrid.deleteRow(dsID);
+                    }
+                });
+            }
+
+            function showPropertiesWindow(currentDocId) {
+                var dhxWins = new dhtmlXWindows();
+                dhxWins.attachViewportTo("wrapper");
+                dhxWins.setSkin(lSkin);
+                docVersionsWindow = dhxWins.createWindow("w1", 10, 10, 400, 350);
+                docVersionsWindow.setText(myGrid.cells(currentDocId, 1).getValue().split("^")[0].replace('[Unverified] ', '') + " Properties");
+                dhxWins.window("w1").center();
+                dhxWins.window("w1").setModal(true);
+                dhxWins.window("w1").button("park").hide();
+                dhxWins.window("w1").button("minmax").hide();
+
+                docVersionsWindow.attachEvent("onClose", function (win) {
+                    filterDocs(null);
+                    return true;
+                });
+
+                var cellVal = myGrid.cells(currentDocId, 1).getValue().split("^")[0].replace('[Unverified] ', '');
+                if (cellVal.includes('.')) {
+                    cellVal = cellVal.split(".")[0];
+                }
+
+                formData = [
+                    { type: "settings", position: "label-top", labelWidth: 150, inputWidth: 345 },
+                    {
+                        type: "block", inputWidth: "auto", offsetTop: 12, list: [
+                            { type: "input", label: "File Name", name: 'FileName', value: cellVal, required: true },
+                            { type: "calendar", label: "Release Date", name: 'ReleaseDate', value: myGrid.getUserData(currentDocId, "ReleaseDate"), skin: lSkin, dateFormat: "%Y-%m-%d %H:%i", width: 240, enableTime: true, enableTodayButton: true },
+                            { type: "input", label: "Notes", name: 'Notes', value: myGrid.cells(currentDocId, 6).getValue(), rows: 6 },
+                            { type: "button", value: "Save", width: 134, name: "Save", offsetLeft: 100 }
+                        ]
+                    }
+                ];
+                myForm = docVersionsWindow.attachForm(formData, true);
+                myForm.setUserData("Notes", "docId", currentDocId);
+
+                myForm.attachEvent("onButtonClick", function (name) {
+                    myForm.validate();
+                    if (myForm.getItemValue("FileName") != '') {
+                        CustomDocumentController.updateDocument(myForm.getUserData("Notes", "docId"), myForm.getItemValue("Notes"), myForm.getItemValue("ReleaseDate"), myForm.getItemValue("FileName"), function (result, event) {
+                            if (event.type == 'exception') {
+                                alert(event.message);
+                            } else {
+                                docVersionsWindow.close();
+                            }
+                        });
+                    }
+
+                });
+
+
+
+            }
+
+            function showRestrictAccessWindow(currentDocId) {
+                var dhxWins = new dhtmlXWindows();
+                dhxWins.attachViewportTo("wrapper");
+                dhxWins.setSkin(lSkin);
+                docVersionsWindow = dhxWins.createWindow("w1", 10, 10, 950, 370);
+                docVersionsWindow.setText("Restrict access to " + myGrid.cells(currentDocId, 1).getValue().split("^")[0]);
+                dhxWins.window("w1").center();
+                dhxWins.window("w1").setModal(true);
+                dhxWins.window("w1").button("park").hide();
+
+                docVersionsWindow.attachEvent("onClose", function (win) {
+                    filterDocs(null);
+                    $(".dhx_cell_progress_img").css("background", "");
+                    return true;
+                });
+
+                dhxWins.attachEvent("onResizeFinish", function (win) {
+                    var dim = win.getDimension();
+                    console.log(dim);
+                    RestrictAccessWindowLayout.cells("a").setWidth(dim[0] / 2);
+                });
+
+
+                var RestrictAccessWindowLayout = docVersionsWindow.attachLayout("2U");
+
+                RestrictAccessWindowLayout.setSkin(lSkin);
+                RestrictAccessWindowLayout.cells('a').setText("Add Members");
+                RestrictAccessWindowLayout.cells('b').setText("Shared With");
+                RestrictAccessWindowLayout.cells("a").hideArrow();
+                RestrictAccessWindowLayout.cells("b").hideArrow();
+
+                //var autoSizes = RestrictAccessWindowLayout.listAutoSizes();
+
+                RestrictAccessWindowLayout.setAutoSize("a", "a;b");
+
+                var usersList;
+                var groupsList;
+
+                var RestrictAccessWindowForm = RestrictAccessWindowLayout.cells("a").attachForm([
+                    {
+                        type: "block", style: "margin: 0px 0px 0px 0px;", list: [
+                            { type: "settings", position: "label-left" },
+                            { type: "select", labelWidth: 28, inputWidth: 65, name: "Type", id: "Type", label: "Type", value: "", options: [{ value: "Users", text: "Users" }, { value: "Groups", text: "Groups" }] },
+                            { type: "newcolumn", offsetLeft: 20 },
+                            { type: "combo", label: "", className: "searchDropdown", inputWidth: 235, comboType: "image", name: "searchValue", filtering: true, offsetLeft: 0 },
+                            { type: "newcolumn", offsetLeft: 20 },
+                            { type: "select", offsetLeft: 5, labelWidth: 36, inputWidth: 55, name: "Access", id: "Access", label: "Access", value: "read", options: [{ value: "read", text: "Read" }, { value: "edit", text: "Edit" }] },
+                        ]
+                    },
+                    {
+                        type: "block", style: "margin: 0px 0px 0px 0px;", list: [
+                            { type: "container", name: "HTMLcontainer", id: "HTMLcontainer", inputWidth: "auto", inputHeight: RestrictAccessWindowLayout.cells("b").getHeight() - 100 }
+                        ]
+                    }
+                ]);
+
+                var dhxCombo = RestrictAccessWindowForm.getCombo("searchValue");
+
+                CustomDocumentController.getUsers('', function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        var data = ($('<div>').html(result.users).text());
+                        groupsList = ($('<div>').html(result.groups).text());
+                        usersList = data;
+                        dhxCombo.load(data);
+                    }
+                });
+
+                $("#AddPinsButtonDiv").remove();
+
+                var container = RestrictAccessWindowForm.getContainer("HTMLcontainer");
+                var pinsDiv = document.createElement('div');
+                pinsDiv.setAttribute("id", "pinsDiv");
+                var AddPinsButtonDiv = document.createElement('div');
+                AddPinsButtonDiv.setAttribute("id", "AddPinsButtonDiv");
+                container.appendChild(pinsDiv);
+                container.appendChild(AddPinsButtonDiv);
+
+                var RestrictAccessActionWindowFormData = [
+                    {
+                        type: "block", style: "margin: 0px 20px 10px 0px;", list: [
+                            { type: "settings", position: "label-left", labelWidth: 45, inputWidth: 200 },
+                            { type: "button", value: "Add", width: 134, disabled: true, name: "AddAccess" }
+                        ]
+                    }
+                ];
+                var RestrictAccessActionWindowForm = new dhtmlXForm("AddPinsButtonDiv", RestrictAccessActionWindowFormData);
+
+                RestrictAccessActionWindowForm.attachEvent("onButtonClick", function (name) {
+                    var members = pinsDiv.getElementsByTagName("SPAN");
+                    //console.log(members);
+                    for (var i = 0; i < members.length; i++) {
+                        if (members[i].id) {
+                            if (members[i].id != 'OwnAccount') {
+                                addAccess(members[i].id, currentDocId, members[i].dataset.accesstype);
+                            } else {
+                                CustomDocumentController.setAccountShareOnly(currentDocId, true, AccId, members[i].dataset.accesstype, function (result, event) {
+                                    if (event.type == 'exception') {
+                                        dhtmlx.alert({
+                                            type: "alert-error",
+                                            text: event.message,
+                                            title: "Error",
+                                            ok: "Ok",
+                                            callback: function (result) {
+
+                                            }
+                                        });
+                                    } else {
+                                        getCurrentPermissionsForTheDocument(currentDocId);
+                                    }
+                                });
+                            }
+                        }
+                    }
+                    RestrictAccessActionWindowForm.disableItem("AddAccess");
+                    pinsDiv.innerHTML = "";
+                });
+
+                RestrictAccessWindowForm.attachEvent("onChange", function (name, value, state) {
+                    if (name == 'Type') {
+                        dhxCombo.unSelectOption();
+                        if (value == 'Groups') {
+                            dhxCombo.load(groupsList);
+                            if (AccRecordTypeName == 'Limited Partner' || AccRecordTypeName == 'Bank' || AccRecordTypeName == 'LP (Individuals)') {
+                                dhxCombo.addOption("OwnAccount", "Finance Team - This account only", null, null);
+                            }
+
+                        } else {
+                            dhxCombo.load(usersList);
+                        }
+
+                    } else if (name == 'searchValue') {
+                        if (dhxCombo.getSelectedText() != null && dhxCombo.getSelectedText() != '') {
+                            var isAlreadySelected = document.getElementById(RestrictAccessWindowForm.getItemValue('searchValue'));
+                            if (!isAlreadySelected) {
+                                RestrictAccessActionWindowForm.enableItem("AddAccess");
+                                var UserOrGroup = document.createElement('span');
+                                UserOrGroup.setAttribute("id", RestrictAccessWindowForm.getItemValue('searchValue'));
+                                UserOrGroup.setAttribute("data-accesstype", RestrictAccessWindowForm.getItemValue('Access'));
+                                UserOrGroup.className = "UserOrGroupSelected";
+                                UserOrGroup.innerHTML = '<span>' + dhxCombo.getSelectedText() + ' (' + RestrictAccessWindowForm.getItemValue('Access').charAt(0).toUpperCase() + RestrictAccessWindowForm.getItemValue('Access').slice(1) + ')' + '</span>' + '<a class="UserOrGroupSelected-Badge" onclick="$(this).parent().remove();">X</a>';
+                                pinsDiv.appendChild(UserOrGroup);
+                            }
+                            dhxCombo.unSelectOption();
+                        }
+                    }
+                });
+
+                CurrentRestrictAccessGrid = RestrictAccessWindowLayout.cells("b").attachGrid();
+                CurrentRestrictAccessGrid.setHeader("TYPE,NAME,ACCESS,&nbsp;");
+                CurrentRestrictAccessGrid.setInitWidths("50,*,60,20");
+                CurrentRestrictAccessGrid.setColAlign("left,left,right,left");
+                CurrentRestrictAccessGrid.setColTypes("rotxt,rotxt,rotxt,link");
+                CurrentRestrictAccessGrid.setColSorting("str,str,str,str");
+                CurrentRestrictAccessGrid.enableAlterCss("even", "uneven");
+                CurrentRestrictAccessGrid.enableRowsHover(true, 'grid_hover');
+                CurrentRestrictAccessGrid.setImagePath("{!URLFOR($Resource.DHTMLX)}" + '/skins/' + dhtmlxSkin + '/imgs/dhxgrid_' + dhtmlxSkin + '/');
+                CurrentRestrictAccessGrid.setIconsPath("{!URLFOR($Resource.DHTMLX, '/customIcons/')}");
+                CurrentRestrictAccessGrid.init();
+                getCurrentPermissionsForTheDocument(currentDocId);
+
+            }
+
+            function openUploadWindow() {
+                var url = (window.location != window.parent.location) ? document.referrer : document.location.href;
+                parent.postMessage('openUploadWindow' + '-del-' + TagTree.getSelectedItemId(), url);
+            }
+
+            function openModal(o, type, isCommunity) {
+                var url = (window.location != window.parent.location) ? document.referrer : document.location.href;
+                parent.postMessage('showFilePreview' + '-del-' + o, url);
+            }
+
+            function reApplyTags() {
+                myLayout.cells("b").progressOn();
+                CustomDocumentController.reApplyTags(AccId, function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        filterDocs(null);
+                    }
+                });
+            }
+
+            function getCurrentDefaultSharings() {
+                CustomDocumentController.getCurrentDefaultSharings(function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        var data = result;
+                        console.log(result);
+                        data = ($('<div>').html(data).text());
+                        console.log(data);
+                        CurrentRestrictAccessGrid.clearAll();
+                        CurrentRestrictAccessGrid.parse(data, "json");
+                    }
+                });
+            }
+
+            function openDefaultSharing() {
+                var dhxWins = new dhtmlXWindows();
+                dhxWins.attachViewportTo("wrapper");
+                dhxWins.setSkin(lSkin);
+                docVersionsWindow = dhxWins.createWindow("w1", 10, 10, 950, 370);
+                docVersionsWindow.setText("Default Sharing");
+                dhxWins.window("w1").center();
+                dhxWins.window("w1").setModal(true);
+                dhxWins.window("w1").button("park").hide();
+
+                dhxWins.attachEvent("onResizeFinish", function (win) {
+                    var dim = win.getDimension();
+                    RestrictAccessWindowLayout.cells("a").setWidth(dim[0] / 2);
+                });
+
+                var RestrictAccessWindowLayout = docVersionsWindow.attachLayout("2U");
+                RestrictAccessWindowLayout.setSkin(lSkin);
+                RestrictAccessWindowLayout.cells('a').setText("Add Members");
+                RestrictAccessWindowLayout.cells('b').setText("Default Sharing");
+                RestrictAccessWindowLayout.cells("a").hideArrow();
+                RestrictAccessWindowLayout.cells("b").hideArrow();
+                RestrictAccessWindowLayout.setAutoSize("a", "a;b");
+
+                var usersList;
+                var groupsList;
+
+                var RestrictAccessWindowForm = RestrictAccessWindowLayout.cells("a").attachForm([
+                    {
+                        type: "block", style: "margin: 0px 0px 0px 0px;", list: [
+                            { type: "settings", position: "label-left" },
+                            { type: "select", labelWidth: 28, inputWidth: 65, name: "Type", id: "Type", label: "Type", value: "", options: [{ value: "Users", text: "Users" }, { value: "Groups", text: "Groups" }] },
+                            { type: "newcolumn", offsetLeft: 20 },
+                            { type: "combo", label: "", className: "searchDropdown", inputWidth: 235, comboType: "image", name: "searchValue", filtering: true, offsetLeft: 0 },
+                            { type: "newcolumn", offsetLeft: 20 },
+                            { type: "select", offsetLeft: 5, labelWidth: 36, inputWidth: 55, name: "Access", id: "Access", label: "Access", value: "read", options: [{ value: "read", text: "Read" }, { value: "edit", text: "Edit" }] },
+                        ]
+                    },
+                    {
+                        type: "block", style: "margin: 0px 0px 0px 0px;", list: [
+                            { type: "container", name: "HTMLcontainer", id: "HTMLcontainer", inputWidth: "auto", inputHeight: RestrictAccessWindowLayout.cells("a").getHeight() - 100 }
+                        ]
+                    }
+                ]);
+
+                var dhxCombo = RestrictAccessWindowForm.getCombo("searchValue");
+
+                CustomDocumentController.getUsers('', function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        var data = ($('<div>').html(result.users).text());
+                        groupsList = ($('<div>').html(result.groups).text());
+                        usersList = data;
+                        dhxCombo.load(data);
+                    }
+                });
+
+                $("#AddPinsButtonDiv").remove();
+
+                var container = RestrictAccessWindowForm.getContainer("HTMLcontainer");
+                var pinsDiv = document.createElement('div');
+                pinsDiv.setAttribute("id", "pinsDiv");
+                var AddPinsButtonDiv = document.createElement('div');
+                AddPinsButtonDiv.setAttribute("id", "AddPinsButtonDiv");
+                container.appendChild(pinsDiv);
+                container.appendChild(AddPinsButtonDiv);
+
+                var RestrictAccessActionWindowFormData = [
+                    {
+                        type: "block", style: "margin: 0px 20px 10px 0px;", list: [
+                            { type: "settings", position: "label-left", labelWidth: 45, inputWidth: 200 },
+                            { type: "button", value: "Add", width: 134, disabled: true, name: "AddAccess" }
+                        ]
+                    }
+                ];
+                var RestrictAccessActionWindowForm = new dhtmlXForm("AddPinsButtonDiv", RestrictAccessActionWindowFormData);
+
+                RestrictAccessActionWindowForm.attachEvent("onButtonClick", function (name) {
+                    var members = pinsDiv.getElementsByTagName("SPAN");
+                    for (var i = 0; i < members.length; i++) {
+                        if (members[i].id) {
+                            CustomDocumentController.addDefaultPermission(members[i].id, members[i].dataset.accesstype, function (result, event) {
+                                if (event.type == 'exception') {
+                                    console.log();
+                                } else {
+                                    getCurrentDefaultSharings();
+                                }
+                            });
+                        }
+                    }
+                    RestrictAccessActionWindowForm.disableItem("AddAccess");
+                    pinsDiv.innerHTML = "";
+                });
+
+                RestrictAccessWindowForm.attachEvent("onChange", function (name, value, state) {
+                    if (name == 'Type') {
+                        dhxCombo.unSelectOption();
+                        if (value == 'Groups') {
+                            dhxCombo.load(groupsList);
+                        } else {
+                            dhxCombo.load(usersList);
+                        }
+
+                    } else if (name == 'searchValue') {
+                        if (dhxCombo.getSelectedText() != null && dhxCombo.getSelectedText() != '') {
+                            var isAlreadySelected = document.getElementById(RestrictAccessWindowForm.getItemValue('searchValue'));
+                            if (!isAlreadySelected) {
+                                RestrictAccessActionWindowForm.enableItem("AddAccess");
+                                var UserOrGroup = document.createElement('span');
+                                UserOrGroup.setAttribute("id", RestrictAccessWindowForm.getItemValue('searchValue'));
+                                UserOrGroup.setAttribute("data-accesstype", RestrictAccessWindowForm.getItemValue('Access'));
+                                UserOrGroup.className = "UserOrGroupSelected";
+                                UserOrGroup.innerHTML = '<span>' + dhxCombo.getSelectedText() + ' (' + RestrictAccessWindowForm.getItemValue('Access').charAt(0).toUpperCase() + RestrictAccessWindowForm.getItemValue('Access').slice(1) + ')' + '</span>' + '<a class="UserOrGroupSelected-Badge" onclick="$(this).parent().remove();">X</a>';
+                                pinsDiv.appendChild(UserOrGroup);
+                            }
+                            dhxCombo.unSelectOption();
+                        }
+                    }
+                });
+
+                CurrentRestrictAccessGrid = RestrictAccessWindowLayout.cells("b").attachGrid();
+                CurrentRestrictAccessGrid.setHeader("TYPE,NAME,ACCESS,&nbsp;");
+                CurrentRestrictAccessGrid.setInitWidths("50,*,60,20");
+                CurrentRestrictAccessGrid.setColAlign("left,left,right,left");
+                CurrentRestrictAccessGrid.setColTypes("rotxt,rotxt,rotxt,link");
+                CurrentRestrictAccessGrid.setColSorting("str,str,str,str");
+                CurrentRestrictAccessGrid.enableAlterCss("even", "uneven");
+                CurrentRestrictAccessGrid.enableRowsHover(true, 'grid_hover');
+                CurrentRestrictAccessGrid.setImagePath("{!URLFOR($Resource.DHTMLX)}" + '/skins/' + dhtmlxSkin + '/imgs/dhxgrid_' + dhtmlxSkin + '/');
+                CurrentRestrictAccessGrid.setIconsPath("{!URLFOR($Resource.DHTMLX, '/customIcons/')}");
+                CurrentRestrictAccessGrid.init();
+
+                getCurrentDefaultSharings();
+
+            }
+
+            function openMailUsers() {
+                if (!dhxWins2) {
+                    var dhxWins2 = new dhtmlXWindows();
+                    dhxWins2.attachViewportTo("wrapper");
+                    dhxWins2.setSkin(lSkin);
+                }
+                if (!dhxWins2.window("w1")) {
+                    mailUsersWindow = dhxWins2.createWindow("w1", 10, 10, 530, 340);
+                    mailUsersWindow.setText("Email Updated Document Links to Alliance Users");
+                    dhxWins2.window("w1").center();
+                    dhxWins2.window("w1").setModal(true);
+                    dhxWins2.window("w1").button("park").hide();
+
+                    dhxWins2.window("w1").attachEvent("onClose", function (win) {
+                        $("#pinsDiv").remove();
+                        win.detachObject(false, "wrapper");
+                        return true;
+                    });
+
+                }
+
+                var MailWindowLayout = dhxWins2.window("w1").attachLayout("2E");
+                MailWindowLayout.setSkin(lSkin);
+                MailWindowLayout.cells("a").hideHeader();
+                MailWindowLayout.cells("a").setHeight(50);
+                MailWindowLayout.cells('b').setText("Add Members");
+                MailWindowLayout.cells("b").hideArrow();
+                MailWindowLayout.cells("a").fixSize(false, true);
+
+                MailWindowLayout.cells("a").attachObject("emailInfoBox");
+                //attachHTMLString
+
+                var MailWindowForm = MailWindowLayout.cells("b").attachForm([
+                    {
+                        type: "block", style: "margin: 0px 0px 0px 0px;", list: [
+                            { type: "settings", position: "label-left" },
+                            { type: "select", labelWidth: 28, inputWidth: 65, name: "Type", id: "Type", label: "Type", value: "", options: [{ value: "Users", text: "Users" }, { value: "Groups", text: "Groups" }] },
+                            { type: "newcolumn", offsetLeft: 20 },
+                            { type: "combo", label: "", className: "searchDropdown", inputWidth: 235, comboType: "image", name: "searchValue", filtering: true, offsetLeft: 0 },
+                        ]
+                    },
+                    {
+                        type: "block", style: "margin: 0px 0px 0px 0px;", list: [
+                            { type: "container", name: "HTMLcontainer2", id: "HTMLcontainer2", inputWidth: "auto", inputHeight: MailWindowLayout.cells("a").getHeight() - 100 }
+                        ]
+                    }
+                ]);
+
+
+
+                var dhxCombo = MailWindowForm.getCombo("searchValue");
+
+                var usersList;
+                var groupsList;
+
+
+
+                CustomDocumentController.getUsers('Community: Alliance Portal', function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        //var data = result;
+                        var data = ($('<div>').html(result.users).text());
+                        groupsList = ($('<div>').html(result.groups).text());
+                        usersList = data;
+                        dhxCombo.load(data);
+                    }
+                });
+
+                $("#AddPinsButtonDiv").remove();
+
+                var container = MailWindowForm.getContainer("HTMLcontainer2");
+                var pinsDiv = document.createElement('div');
+                pinsDiv.setAttribute("id", "pinsDiv");
+                var AddPinsButtonDiv = document.createElement('div');
+                AddPinsButtonDiv.setAttribute("id", "AddPinsButtonDiv");
+                container.appendChild(pinsDiv);
+                container.appendChild(AddPinsButtonDiv);
+
+
+
+
+                var MailActionWindowFormData = [
+                    {
+                        type: "block", style: "margin: 0px 0px 0px -23px;", list: [
+                            { type: "settings", position: "label-left" },
+                            { type: "select", labelWidth: 68, inputWidth: 165, name: "Range", id: "Range", label: "Date Range", value: "Today", options: [{ value: "Today", text: "Today" }, { value: "This Week", text: "This Week" }, { value: "7 Days", text: "7 Days" }, { value: "This Month", text: "This Month" }] },
+                            { type: "button", value: "Send", width: 134, disabled: true, name: "Send" }
+                        ]
+                    }
+                ];
+                var MailActionWindowForm = new dhtmlXForm("AddPinsButtonDiv", MailActionWindowFormData);
+
+                CustomDocumentController.getUsersWithAccessForDocs(AccId, function (result, event) {
+                    if (event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        console.log(result);
+                        for (let a of result) {
+                            MailActionWindowForm.enableItem("Send");
+                            var UserOrGroup = document.createElement('span');
+                            UserOrGroup.setAttribute("id", a.Id);
+                            UserOrGroup.className = "UserOrGroupSelected";
+                            UserOrGroup.innerHTML = '<span>' + a.Name + '</span>' + '<a class="UserOrGroupSelected-Badge" onclick="$(this).parent().remove();">X</a>';
+                            pinsDiv.appendChild(UserOrGroup);
+                        }
+                    }
+                });
+
+                MailActionWindowForm.attachEvent("onButtonClick", function (name) {
+                    var members = pinsDiv.getElementsByTagName("SPAN");
+                    var usersAndGroups = [];
+                    for (var i = 0; i < members.length; i++) {
+                        if (members[i].id) {
+                            usersAndGroups.push(members[i].id);
+                        }
+                    }
+                    CustomDocumentController.sendEmail(usersAndGroups, AccId, MailActionWindowForm.getItemValue('Range'), function (result, event) {
+                        if (event.type == 'exception') {
+                            console.log();
+                        } else {
+                            dhtmlx.message({
+                                text: 'Sent Updated Document Links to Alliance Users'
+                            });
+                            dhxWins2.window("w1").close();
+                        }
+                    });
+
+                });
+
+
+
+                MailWindowForm.attachEvent("onChange", function (name, value, state) {
+                    if (name == 'Type') {
+                        dhxCombo.unSelectOption();
+                        if (value == 'Groups') {
+                            /*if (!groupsList) {
+                                CustomDocumentController.getGroups(function (result, event) {
+                                    if (event.type == 'exception') {
+                                        alert(event.message);
+                                    } else {
+                                        var data = result;
+
+                                        data = ($('<div>').html(data).text());
+                                        console.log(data);
+                                        groupsList = data;
+                                        dhxCombo.load(data);
+
+                                        
+
+                                    }
+                                });
+                            } else {
+                                dhxCombo.load(groupsList);
+                            }*/
+                            dhxCombo.load(groupsList);
+                        } else {
+                            dhxCombo.load(usersList);
+                        }
+
+                    } else if (name == 'searchValue') {
+                        if (dhxCombo.getSelectedText() != null && dhxCombo.getSelectedText() != '') {
+                            var isAlreadySelected = document.getElementById(MailWindowForm.getItemValue('searchValue'));
+                            if (!isAlreadySelected) {
+                                MailActionWindowForm.enableItem("Send");
+                                var UserOrGroup = document.createElement('span');
+                                UserOrGroup.setAttribute("id", MailWindowForm.getItemValue('searchValue'));
+                                UserOrGroup.className = "UserOrGroupSelected";
+                                UserOrGroup.innerHTML = '<span>' + dhxCombo.getSelectedText() + '</span>' + '<a class="UserOrGroupSelected-Badge" onclick="$(this).parent().remove();">X</a>';
+                                pinsDiv.appendChild(UserOrGroup);
+                            }
+                            dhxCombo.unSelectOption();
+                        }
+                    }
+                });
+
+
+            }
+
+            $("#stext").on('keyup', function (e) {
+                if (e.keyCode == 13) {
+                    TagTree.findItem(document.getElementById('stext').value);
+                }
+            });
+
+            if (window.attachEvent)
+                window.attachEvent("onresize", resizeLayout);
+            else
+                window.addEventListener("resize", resizeLayout, false);
+
+            var t;
+
+            function resizeLayout() {
+                window.clearTimeout(t);
+                t = window.setTimeout(function () {
+                    optimizeScreenView();
+                    myLayout.setSizes(false);
+
+                }, 200);
+            }
+
+            function optimizeScreenView(obj) {
+                console.log($("#layoutObj").width());
+                if ($("#layoutObj").width() > 1200) {
+                    myLayout.cells("a").setWidth(230);
+                    myLayout.cells("c").setWidth(290);
+
+
+
+
+                    myGrid.setColWidth(3, "100");
+                    myGrid.setColWidth(1, "*");
+                    myGrid.setColWidth(8, "*");
+                    myGrid.setColLabel(3, "CREATED DATE");
+                    //myGrid.moveColumn(4, 8);
+                } else {
+                    myLayout.cells("a").setWidth(180);
+                    myLayout.cells("c").setWidth(200);
+
+                    /*myGrid.setColumnHidden(4, false);
+                    myGrid.setColumnHidden(5, false);
+                    myGrid.setColumnHidden(9, true);
+                    myGrid.setColumnHidden(12, true);*/
+
+                    myGrid.setColWidth(3, "37");
+                    myGrid.setColWidth(1, "350");
+                    myGrid.setColWidth(8, "300");
+                    myGrid.setColLabel(3, "DATE");
+                    //myGrid.moveColumn(8, 6);
+                    if (obj == "FirstLoad") {
+                        //
+
+                    }
+
+
+                }
+
+            }
+
+            function closeBanner() {
+                $('#innerBanner').remove();
+                $('.objbox').css('margin-top', '0px');
+                $('.objbox').css('height', ($('.objbox').height() + 20));
+            }
+
+            function reAlignNotes() {
+                myGrid.forEachRow(function (rowId) {
+                    if (myGrid.cells(rowId, 6).getValue() != null) {
+                        myGrid.cellById(rowId, 6).close();
+                        myGrid.cellById(rowId, 6).open();
+                    }
+                });
+            }
+
+
+
+        </script>
+
+    </body>
+</apex:page>

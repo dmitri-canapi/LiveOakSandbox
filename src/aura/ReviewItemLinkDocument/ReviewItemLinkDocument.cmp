@@ -1,0 +1,30 @@
+<aura:component controller="Review_Items_Controller"
+    implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes"
+    access="global">
+    <aura:attribute name="recordId" type="String" />
+    <aura:attribute name="IsCommunity" type="Boolean" />
+    <aura:attribute name="communityName" type="String" />
+    <aura:attribute name="BaseUrl" type="String" />
+    <aura:attribute name="highlightedDoc" type="String" />
+    <ltng:require styles="{!$Resource.popStyle }" />
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+    <lightning:overlayLibrary aura:id="overlayLib" />
+
+    <div
+        style="margin-bottom: 5px; width: 100%; position: relative; background: whitesmoke; height: 34px; padding-left: 5px; text-align: center; line-height: 34px; font-size: 16px;">
+        Select Documents
+    </div>
+    {!v.body}
+    <aura:if isTrue="{!v.IsCommunity}">
+        <iframe aura:id="riFrame" id="riFrame"
+            style="border: none;height:340px;;min-width:800px;width: 100%;margin-top: -40px;"
+            src="{!'/' + v.communityName + '/apex/ReviewItemLinkDocument' + '?id=' + v.recordId}" />
+        <aura:set attribute="else">
+            <iframe aura:id="riFrame" id="riFrame"
+                style="border: none;min-width:800px;width: 100%;height:340px;margin-top: -35px;"
+                src="{!'/apex/ReviewItemLinkDocument' + '?id=' + v.recordId}" />
+        </aura:set>
+    </aura:if>
+
+
+</aura:component>

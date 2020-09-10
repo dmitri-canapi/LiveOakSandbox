@@ -1,0 +1,169 @@
+<aura:component controller="CustomDocumentController"
+    implements="lightning:isUrlAddressable,force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,force:hasSObjectName,forceCommunity:availableForAllPageTypes"
+    access="global">
+
+    <aura:attribute name="Document" type="Document_Helper__c"
+        default="{'sobjectType': 'Document_Helper__c','Name__c':'','Sensitivity__c': 'Restricted','Id':'','ConvertToDocuments__c':true,'Account__c':null,'Board_Meeting__c':null,'Contact__c':null,'Opportunity__c':null, 'Documents_Folder_Template__c':null}" />
+    <aura:attribute name="ReviewItemFiles" type="Object" />
+    <aura:attribute name="uploadView" type="String" default="uploadView" />
+    <aura:attribute name="IsCommunity" type="Boolean" />
+    <aura:attribute name="skin" type="String" default="skyblue" />
+    <aura:attribute name="communityName" type="String" />
+    <aura:attribute name="readOnlyMode" type="String" default="false" />
+    <aura:attribute name="componentHeight" type="String" default="400" />
+
+    <aura:attribute name="listOptions" type="List" default="[]" />
+    <aura:attribute name="defaultOptions" type="List" default="[]" />
+    <aura:attribute name="requiredOptions" type="List" default="[]" />
+    <aura:attribute name="selectedArray" type="List" />
+    <aura:attribute name="NewTagValue" type="String" default="" />
+    <aura:attribute name="mainDomain" type="String" default="" />
+    <aura:attribute name="recordId" type="String" />
+    <aura:attribute name="AccRecordId" type="String" />
+    <aura:attribute name="sObjectName" type="String" />
+    <aura:attribute name="recordName" type="String" />
+    <aura:attribute name="customRecordId" type="String" />
+    <aura:attribute name="customRecordName" type="String" />
+    <aura:attribute name="customRecordType" type="String" />
+    <aura:attribute name="BaseUrl" type="String" />
+    <aura:attribute name="highlightedDoc" type="String" />
+
+    <aura:attribute name="isOpen" type="boolean" default="false" />
+    <aura:attribute name="currentFileId" type="String" default="" />
+
+    <aura:registerEvent name="updateLookup" type="c:DHTMLXgridRowSelect" />
+
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+
+    <!--lightning:layout horizontalAlign="end">
+        <lightning:button label="New" variant="brand" onclick="{!c.openmodal}" class="newButt"/>
+    </lightning:layout-->
+
+    <aura:if isTrue="{!v.IsCommunity}">
+        <iframe id="vfFrame" aura:id="vfFrame"
+            style="{! 'border: none;min-height:' + v.componentHeight + 'px;width: 100%;'}"
+            src="{! '/' +v.communityName + '/apex/UploadedDocumentsForAccount?recordId=' + v.recordId + '&amp;isCommunity=' + v.IsCommunity + '&amp;skin=' + v.skin + '&amp;communityName=' + v.communityName + '&amp;componentHeight=' + v.componentHeight + '&amp;readOnlyMode=' + v.readOnlyMode + '&amp;highlightedDoc=' + v.highlightedDoc}" />
+        <aura:set attribute="else">
+            <iframe id="vfFrame" aura:id="vfFrame"
+                style="{! 'border: none;min-height:' + v.componentHeight + 'px;width: 100%;'}"
+                src="{!'/apex/UploadedDocumentsForAccount?recordId=' + v.recordId + '&amp;isCommunity=' + v.IsCommunity + '&amp;skin=' + v.skin + '&amp;communityName=' + v.communityName + '&amp;componentHeight=' + v.componentHeight + '&amp;readOnlyMode=' + v.readOnlyMode + '&amp;highlightedDoc=' + v.highlightedDoc}" />
+        </aura:set>
+    </aura:if>
+
+
+
+    <br /><br /><br />
+
+    <div aura:id="Modalbox" role="dialog" tabindex="-1" aria-labelledby="header43" class="slds-modal" style="">
+        <div class="slds-modal__container">
+            <div class="slds-modal__header">
+                <h2 class="slds-text-heading--medium">Upload Documents to {!v.customRecordName}</h2>
+            </div>
+            <aura:if isTrue="{!v.uploadView=='uploadView'}">
+                <div class="slds-modal__content slds-p-around--medium slds-grid slds-wrap "
+                    style="height: auto !important;">
+                    <h3 style="font-size: 12px;width:100%;margin-bottom: 15px;">
+                        Upload similar documents in groups of one or more, so that each group of similar documents has
+                        the same tags applied to them.
+                    </h3>
+
+                    <div class="slds-col slds-size_3-of-3">
+                        <lightning:fileUpload label="Attach Files" name="fileUploader" multiple="true"
+                            recordId="{!v.Document.Id}" onuploadfinished="{!c.onUploadFinished}" />
+
+                    </div>
+                    <div class="slds-grid slds-wrap slds-col slds-size_4-of-4">
+                        <aura:iteration items="{!v.ReviewItemFiles}" var="file">
+                            <div class="slds-col slds-size_2-of-4">
+                                <lightning:fileCard fileId="{!file.Id}" />
+                            </div>
+                        </aura:iteration>
+                    </div>
+
+
+                    <lightning:recordEditForm aura:id="recordCreateForm" objectApiName="Document__c" class="recForm">
+                        <lightning:messages />
+                        <lightning:layout multipleRows="true">
+                            <lightning:layoutItem size="3">
+                                <lightning:inputField fieldName="Sensitivity__c" value="{!v.Document.Sensitivity__c}" />
+                            </lightning:layoutItem>
+                            <lightning:layoutItem>
+                                <aura:iteration items="{!v.defaultOptions}" var="tag" indexVar="index">
+                                    <div style="padding-top: 30px;padding-left: 5px; display: inline-block;">
+                                        <lightning:pill label="{!tag.label}" name="{!tag.value}"
+                                            onremove="{! c.handleRemove }" />
+                                    </div>
+                                </aura:iteration>
+
+                            </lightning:layoutItem>
+                            <div class="slds-size_2-of-12" style="padding-top: 30px;padding-left: 15px;">
+                                <a onclick="{!c.chageViewToTags}">Add
+                                    tag...</a><br /><br /><br /><br /><br /><br /><br />
+                            </div>
+
+                        </lightning:layout>
+                    </lightning:recordEditForm>
+
+                </div>
+            </aura:if>
+            <aura:if isTrue="{!v.uploadView=='tagView'}">
+                <div class="slds-modal__content slds-p-around--medium slds-grid slds-wrap ">
+                    <h3 style="font-size: 12px;width:100%;margin-bottom: 15px;">
+                        Upply one or more tags to make it easier to locate documents later in due diligence process.
+                    </h3>
+                    <div class="slds-size_12-of-12">
+                        <lightning:button variant="neutral" label="Back" onclick="{!c.chageViewToUpload}" />
+                    </div>
+                    <div class="slds-form--stacked slds-p-around--medium slds-m-bottom--x-small" style="width:100%">
+                        <aura:if isTrue="{!v.IsCommunity}">
+                            <iframe style="border: none;min-height:230px;width: 100%;"
+                                src="{!'/fintech/apex/dhtmlxTags' + '?id=' + v.Document.Id + '&amp;accId=' + v.AccRecordId}" />
+                            <aura:set attribute="else">
+                                <iframe style="border: none;min-height:230px;width: 100%;"
+                                    src="{!'/apex/dhtmlxTags' + '?id=' + v.Document.Id + '&amp;accId=' + v.AccRecordId}" />
+                                <a style="display:block" onclick="{!c.chageViewToEditTags}">Edit tags...</a>
+                            </aura:set>
+                        </aura:if>
+
+
+                    </div>
+                </div>
+            </aura:if>
+            <aura:if isTrue="{!v.uploadView=='tagEditView'}">
+                <div class="slds-modal__content slds-p-around--medium slds-grid slds-wrap ">
+                    <h3 style="font-size: 12px;width:100%;margin-bottom: 15px;">
+                        Drag and drop tags to create hierarchies. Use right/context menu to add, rename or delete tags:
+                    </h3>
+                    <div class="slds-size_12-of-12">
+                        <lightning:button variant="neutral" label="Back" onclick="{!c.chageViewToTags}" />
+                    </div>
+                    <div class="slds-form--stacked slds-p-around--medium slds-m-bottom--x-small" style="width:100%">
+                        <iframe style="border: none;min-height:250px;width: 100%;"
+                            src="{!'/apex/dhtmlxEditTags'  + '?accId=' + v.AccRecordId}" />
+                    </div>
+
+
+
+                </div>
+            </aura:if>
+            <div class="slds-modal__footer">
+                <lightning:button variant="neutral" label="Cancel" onclick="{!c.closeModal}" />
+                <lightning:button variant="brand" label="Save" onclick="{!c.saveRecord}" />
+            </div>
+        </div>
+    </div>
+    <div aura:id="Modalbackdrop" class="slds-backdrop"></div>
+    <aura:if isTrue="{!v.isOpen}">
+        <section onclick="{!c.closeModel}" role="dialog" aria-modal="true" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <div class="slds-modal__content slds-p-around_medium slds-text-align_center"
+                    style="background: transparent;">
+                    <div style="width: 50%; margin: 0 auto; text-align: left">
+                        <lightning:fileCard fileId="{!v.currentFileId}" />
+                    </div>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </aura:if>
+</aura:component>
